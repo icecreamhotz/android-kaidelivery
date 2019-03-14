@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:bind="http://schemas.android.com/tools">
+    <data>
+        <variable
+                name="viewModel"
+                type="app.icecreamhot.kaidelivery.ui.restaurant.RestaurantViewModel"
+        />
+    </data>
+
+    <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="6dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:orientation="horizontal">
+            
+            <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent">
+    
+                <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/res_logo"
+                        android:layout_width="96dp"
+                        android:layout_height="96dp"
+                        app:imageUrl="@{viewModel.getRestaurantLogo()}"/>
+                
+            </LinearLayout>
+    
+            <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingLeft="15dp"
+                    android:paddingRight="15dp">
+                
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                    
+                    <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                        
+                            <TextView
+                                    android:id="@+id/res_name"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textStyle="bold"
+                                    app:mutableText="@{viewModel.getRestaurantName()}"
+                            />
+        
+                            <TextView
+                                    android:id="@+id/predic_kilometers"
+                                    android:layout_width="50dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignRight="@id/res_name"
+                                    android:textSize="10sp"
+                                    android:gravity="right"
+                                    android:paddingTop="5dp"
+                                    app:mutableText="@{viewModel.getKilometerDistance()}"
+                            />
+                        
+                    </RelativeLayout>
+                    
+                    <TextView
+                            android:id="@+id/res_details"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            app:mutableText="@{viewModel.getRestaurantType()}"
+                    />
+                    
+                </LinearLayout>
+                
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:orientation="horizontal">
+                    
+                    <ImageView
+                            android:layout_width="25dp"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/predictime"
+                    />
+    
+                    <TextView
+                            android:id="@+id/predic_time"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:padding="8dp"
+                            app:mutableText="@{viewModel.getPredictionTimeBetweenDistance()}"/>
+                    
+                </LinearLayout>
+                
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</layout>
