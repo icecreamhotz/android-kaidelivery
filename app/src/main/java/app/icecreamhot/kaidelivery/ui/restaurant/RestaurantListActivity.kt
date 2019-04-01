@@ -1,27 +1,23 @@
 package app.icecreamhot.kaidelivery.ui.restaurant
 
 import android.Manifest
-import android.app.Application
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import android.content.Context
 import android.content.pm.PackageManager
 import androidx.databinding.DataBindingUtil
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
 import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 import androidx.core.app.ActivityCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import android.util.Log
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.databinding.ActivityRestaurantListBinding
-import app.icecreamhot.kaidelivery.injection.ViewModelFactory
-import app.icecreamhot.kaidelivery.model.MyLocation
+import app.icecreamhot.kaidelivery.model.mLatitude
+import app.icecreamhot.kaidelivery.model.mLongitude
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.*
@@ -38,12 +34,7 @@ class RestaurantListActivity: AppCompatActivity(), GoogleApiClient.ConnectionCal
     private var googleApiClient: GoogleApiClient? = null
     private val REQUEST_CODE = 1000
 
-    private lateinit var locationManager: LocationManager
     private lateinit var mLocationRequest: LocationRequest
-
-    companion object {
-        var mLocation = MyLocation()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,18 +73,16 @@ class RestaurantListActivity: AppCompatActivity(), GoogleApiClient.ConnectionCal
 
     override fun onConnected(p0: Bundle?) {
          if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        startLocationUpdates();
+            return
+         }
+        startLocationUpdates()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener {
                 location: Location? ->
-                mLocation.latitude = location?.latitude
-                mLocation.longitude = location?.longitude
-
-                locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                mLatitude = location!!.latitude
+                mLongitude = location!!.longitude
 
                 binding = DataBindingUtil.setContentView(this, R.layout.activity_restaurant_list)
                 binding.restaurantList.layoutManager = LinearLayoutManager(
@@ -101,8 +90,9 @@ class RestaurantListActivity: AppCompatActivity(), GoogleApiClient.ConnectionCal
                     RecyclerView.VERTICAL,
                     false
                 )
+                binding.restaurantList.isNestedScrollingEnabled = false
 
-                viewModel = ViewModelProviders.of(this, ViewModelFactory(this)).get(RestaurantListViewModel::class.java)
+                viewModel = ViewModelProviders.of(this).get(RestaurantListViewModel::class.java)
                 viewModel.errorMessage.observe(this, Observer {
                         errorMessage -> if(errorMessage != null) showError(errorMessage) else hideError()
                 })
@@ -115,7 +105,7 @@ class RestaurantListActivity: AppCompatActivity(), GoogleApiClient.ConnectionCal
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(5000)
-                .setFastestInterval(5000);
+                .setFastestInterval(5000)
     }
 
 
@@ -124,7 +114,7 @@ class RestaurantListActivity: AppCompatActivity(), GoogleApiClient.ConnectionCal
     }
 
     override fun onConnectionFailed(p0: ConnectionResult) {
-
+        googleApiClient!!.disconnect()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

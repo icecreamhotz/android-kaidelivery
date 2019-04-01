@@ -16,7 +16,7 @@ import java.util.*
 import javax.inject.Inject
 
 
-class RestaurantListViewModel(private val restaurantDAO: RestaurantDAO, private val restaurantTypeDAO: RestaurantTypeDAO):BaseViewModel(){
+class RestaurantListViewModel:BaseViewModel(){
     @Inject
     lateinit var restaurantAPI: RestaurantAPI
     @Inject
@@ -39,47 +39,28 @@ class RestaurantListViewModel(private val restaurantDAO: RestaurantDAO, private 
     }
 
     private fun loadRestaurants() {
-        subscription = Observable.fromCallable { restaurantDAO.all }
-            .concatMap {
-                dbRestaurantList ->
-                    if(dbRestaurantList.isEmpty())
-                        restaurantAPI.getRestaurants().concatMap {
-                            apiRestaurantList -> restaurantDAO.insertAll(*apiRestaurantList.employeeArrayList!!.toTypedArray())
-                            Observable.just(apiRestaurantList)
-                        }
-                else
-                        Observable.just(dbRestaurantList)
-            }
+        subscription = restaurantAPI.getRestaurants()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onRetrieveRestaurantListStart() }
+            .doOnSubscribe { onRetrieveRestaurantListFinish() }
             .doOnTerminate { onRetrieveRestaurantListFinish() }
             .subscribe(
-                { result -> loadRestaurantTypes(result)
+                { result -> loadRestaurantTypes(result.employeeArrayList)
                 },
-                { error -> onRetrieveRestaurantListFailed(error) }
+                { error -> Log.d("err", error.message) }
             )
     }
 
     private fun loadRestaurantTypes(restaurantList: Any?) {
-        subscription = Observable.fromCallable{ restaurantTypeDAO.all }
-            .concatMap {
-                dbRestaurantTypeList ->
-                    if(dbRestaurantTypeList.isEmpty())
-                        restaurantTypesAPI.getRestaurantTypes().concatMap {
-                            apiRestaurantTypeList -> restaurantTypeDAO.insertAll(*apiRestaurantTypeList.restaurantTypeArrayList!!.toTypedArray())
-                            Observable.just(apiRestaurantTypeList)
-                        }
-                else
-                        Observable.just(dbRestaurantTypeList)
-            }
+        subscription =
+        restaurantTypesAPI.getRestaurantTypes()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onRetrieveRestaurantListStart() }
+            .doOnSubscribe { onRetrieveRestaurantListFinish() }
             .doOnTerminate { onRetrieveRestaurantListFinish() }
             .subscribe(
                 {
-                    result -> onRetrieveRestaurantListSuccess(restaurantList, result)
+                    result -> onRetrieveRestaurantListSuccess(restaurantList, result.restaurantTypeArrayList)
                 },
                 {
                     error -> Log.d("err", error.message)
@@ -96,9 +77,11 @@ class RestaurantListViewModel(private val restaurantDAO: RestaurantDAO, private 
     }
 
     private fun onRetrieveRestaurantListSuccess(restaurantList:Any?, restaurantTypeList:Any?) {
+        Log.d("datanaja", "dasdas")
         if(restaurantList is List<*> && restaurantTypeList is List<*>) {
-            val a: List<Restaurant> = restaurantList.filterIsInstance<Restaurant>()
-            val b: List<RestaurantType> = restaurantTypeList.filterIsInstance<RestaurantType>()
+            Log.d("datanaja", restaurantList.toString())
+            var a: List<Restaurant> = restaurantList.filterIsInstance<Restaurant>()
+            var b: List<RestaurantType> = restaurantTypeList.filterIsInstance<RestaurantType>()
             for((index, item) in a.withIndex()) {
                 var restype_name: MutableList<String> = mutableListOf<String>()
                 val replaceType = item.restype_id?.replace("[", "")?.replace("]", "")

@@ -1,6 +1,8 @@
 package app.icecreamhot.kaidelivery.ui.restaurant
 
 import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
@@ -9,11 +11,16 @@ import android.widget.Toast
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.model.Restaurant
 import app.icecreamhot.kaidelivery.databinding.ItemRestaurantBinding
+import app.icecreamhot.kaidelivery.model.mRestaurantLatitude
+import app.icecreamhot.kaidelivery.model.mRestaurantLongitude
+import app.icecreamhot.kaidelivery.ui.food.ConfirmFoodActivity
+import app.icecreamhot.kaidelivery.ui.food.FoodActivity
+import app.icecreamhot.kaidelivery.ui.map.MapsActivity
 import javax.inject.Inject
 
 class RestaurantListAdapter @Inject constructor() : RecyclerView.Adapter<RestaurantListAdapter.ViewHolder>() {
-    private lateinit var restaurantList: List<Restaurant>
-    private lateinit var context:Context
+    lateinit var restaurantList: List<Restaurant>
+    lateinit var context:Context
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RestaurantListAdapter.ViewHolder {
         val binding: ItemRestaurantBinding  = DataBindingUtil.inflate(LayoutInflater.from(parent.context), R.layout.item_restaurant, parent, false)
@@ -24,7 +31,12 @@ class RestaurantListAdapter @Inject constructor() : RecyclerView.Adapter<Restaur
     override fun onBindViewHolder(holder: RestaurantListAdapter.ViewHolder, position: Int) {
         holder.bind(restaurantList[position])
         holder.itemView.setOnClickListener {
-            Toast.makeText(context, "Click me !", Toast.LENGTH_SHORT).show()
+            mRestaurantLatitude = restaurantList[position].res_lat!!.toDouble()
+            mRestaurantLongitude = restaurantList[position].res_lng!!.toDouble()
+
+            val intent = Intent(context, FoodActivity::class.java)
+            intent.putExtra("res_id", restaurantList[position].res_id)
+            context.startActivity(intent)
         }
     }
 
@@ -35,6 +47,8 @@ class RestaurantListAdapter @Inject constructor() : RecyclerView.Adapter<Restaur
     fun updateRestaurantList(restaurant: List<Restaurant>) {
         this.restaurantList = restaurant
         notifyDataSetChanged()
+
+        Log.d("nahum", restaurant.toString())
     }
 
     inner class ViewHolder(private val binding: ItemRestaurantBinding): RecyclerView.ViewHolder(binding.root) {
@@ -42,7 +56,8 @@ class RestaurantListAdapter @Inject constructor() : RecyclerView.Adapter<Restaur
 
         fun bind(restaurant: Restaurant) {
             viewModel.bind(restaurant)
-            binding.viewModel = viewModel
+//            binding.viewModel = viewModel
+            Log.d("nahumssss", "Das")
         }
     }
 }

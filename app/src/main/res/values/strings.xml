@@ -6,4 +6,35 @@
     <string name="kilometers_alias">กม.</string>
     <string name="meters_alias">ม.</string>
     <string name="noimg">noimg.png</string>
+    <string name="nofood">ไม่มีข้อมูลอาหาร</string>
+    <string name="allfood">ร้านอาหารทั้งหมด</string>
+    <string name="continuebutton">ต่อไป</string>
+    <string name="orderheader">รายละเอียดอาหาร</string>
+    <string name="endpointdetails">ข้อมูลเพิ่มเติมสำหรับร้านอาหาร</string>
+    <string name="orderdetails">รายละเอียดอาหาร</string>
+    <string name="foodallcaltext">ค่าอาหารทั้งหมด</string>
+    <string name="deliverycaltext">ค่าจัดส่ง</string>
+    <string name="calalltext">รวมค่าใช้จ่ายทั้งหมด</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="loadinglocation">กำลังโหลด...</string>
+    <string name="choosethisplace">เลือกที่อยู่นี้</string>
+    <string name="sendorder">สั่งอาหาร</string>
+    <string name="sendotpbutton">ส่งรหัส OTP</string>
+    <string name="hinttelephone">กรุณากรอกเบอร์โทร</string>
+    <string name="accept">ยืนยัน</string>
+    <string name="pleaseinputotp">กรุณากรอกรหัส OTP ที่ได้รับ</string>
+    <string name="pleaseinputtelephoneagain">กรุณาใส่เบอร์โทรให้ถูกค้อง</string>
+    <string name="retryth">กรุณาลองอีกครั้ง</string>
+    <string name="somethinghaswrong">มีบางอย่างผิดปกติ</string>
+    <string name="wrongotp">รหัส OTP ผิดพลาด กรุณาตรวจสอบใหม่อีกครั้ง!</string>
+    <string name="sendotpsuccess">เรียบร้อย กรุณาตรวจสอบที่ข้อความของคุณ</string>
+    <string name="laststeporder">สั่งอาหารสำเร็จแล้ว | กดเพื่อติดตามอาหาร</string>
+
+    <string name="facebook_app_id">2500531690173363</string>
+    <string name="fb_login_protocol_scheme">fb2500531690173363</string>
+    <string name="title_activity_main2">Main2Activity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_traking_map_fragment">Map</string>
 </resources>

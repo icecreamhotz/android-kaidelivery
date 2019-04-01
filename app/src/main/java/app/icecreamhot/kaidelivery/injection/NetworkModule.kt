@@ -1,5 +1,6 @@
 package app.icecreamhot.kaidelivery.injection
 
+import app.icecreamhot.kaidelivery.network.FoodAPI
 import app.icecreamhot.kaidelivery.network.RestaurantAPI
 import app.icecreamhot.kaidelivery.network.RestaurantTypesAPI
 import app.icecreamhot.kaidelivery.utils.BASE_URL
@@ -15,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 @Module
 @Suppress("unused")
 object NetworkModule {
+
     @Provides
     @Reusable
     @JvmStatic

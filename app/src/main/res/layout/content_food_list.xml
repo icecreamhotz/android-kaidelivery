@@ -1,22 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="wrap_content"
+              android:padding="10dp">
     
-    <TextView
-            android:id="@+id/txtItem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TEST"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="20dp"
-            />
+    <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/foodImgOne"
+            android:layout_width="50dp"
+            android:layout_height="50dp"/>
     
-    <View
+    <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/foodImgTwo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="5dp"/>
+    
+    <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#848484"
-            android:layout_alignParentBottom="true">
-    </View>
+            android:layout_height="match_parent">
+    
+        <LinearLayout
+                android:id="@+id/containerFoodContent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingLeft="10dp"
+                android:layout_toLeftOf="@+id/containerButtonContent">
+            
+            <TextView
+                    android:id="@+id/txtFoodName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+        
+            <TextView
+                    android:id="@+id/txtFoodPrice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            
+        </LinearLayout>
+        
+        <LinearLayout
+                android:id="@+id/containerButtonContent"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true">
+                
+                <ImageButton
+                        android:id="@+id/minusFood"
+                        android:layout_width="30dp"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:tint="@color/colorButtonFood"
+                        android:src="@drawable/icon_minus"/>
+            
+                <TextView
+                        android:id="@+id/txtTotalFood"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="0"
+                        android:gravity="center"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="5dp"
+                        android:textColor="@color/colorButtonFood"/>
+        
+                <ImageButton
+                    android:id="@+id/addFood"
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    android:background="@null"
+                    android:tint="@color/colorButtonFood"
+                    android:src="@drawable/icon_add"/>
+            
+        </LinearLayout>
+    
+    </RelativeLayout>
 
-</RelativeLayout>
+</LinearLayout>

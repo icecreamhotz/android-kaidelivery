@@ -7,8 +7,11 @@ import android.location.Location
 import android.util.Log
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.base.BaseViewModel
-import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListActivity.Companion.mLocation
+import app.icecreamhot.kaidelivery.data.gAliasDistance
+import app.icecreamhot.kaidelivery.data.gDistance
 import app.icecreamhot.kaidelivery.model.Restaurant
+import app.icecreamhot.kaidelivery.model.mLatitude
+import app.icecreamhot.kaidelivery.model.mLongitude
 import app.icecreamhot.kaidelivery.utils.BASE_URL_RESTAURANT_IMG
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -16,16 +19,16 @@ import java.text.DecimalFormat
 
 
 class RestaurantViewModel(): BaseViewModel() {
-    private val res_name = MutableLiveData<String>()
-    private var res_logo: String? = null
-    private var res_lat: String? = null
-    private var res_lng: String? = null
-    private var restype_name: String? = null
+    val res_name = MutableLiveData<String>()
+    var res_logo: String? = null
+    var res_lat: String? = null
+    var res_lng: String? = null
+    var restype_name: String? = null
 
-    private var distance: Int? = null
-    private val predicTime = MutableLiveData<String>()
-    private val predicKm = MutableLiveData<String>()
-    private val show_restypeName = MutableLiveData<String>()
+    var distance: Int? = null
+    val predicTime = MutableLiveData<String>()
+    val predicKm = MutableLiveData<String>()
+    val show_restypeName = MutableLiveData<String>()
 
     fun bind(restaurant: Restaurant) {
 
@@ -37,8 +40,8 @@ class RestaurantViewModel(): BaseViewModel() {
 
         if(res_lat != null && res_lng != null) {
             val startPoint = Location("locationOne")
-            startPoint.setLatitude(mLocation.latitude!!)
-            startPoint.setLongitude(mLocation.longitude!!)
+            startPoint.setLatitude(mLatitude)
+            startPoint.setLongitude(mLongitude)
 
             val endPoint = Location("locationTwo")
             endPoint.setLatitude(res_lat!!.toDouble())
@@ -62,10 +65,10 @@ class RestaurantViewModel(): BaseViewModel() {
         val replaceType = restype_name?.replace("[", "")?.replace("]", "")
             ?.split(",".toRegex())?.dropLastWhile { it.isEmpty() }
             ?.toTypedArray()
-        var restype_nameAll: String = ""
+        var restype_nameAll = ""
 
         replaceType?.forEach {
-            restype_nameAll += it + " "
+            restype_nameAll += "$it "
         }
 
         show_restypeName.value = if(restype_nameAll == "") "ไม่มีข้อมูล" else restype_nameAll
@@ -76,17 +79,15 @@ class RestaurantViewModel(): BaseViewModel() {
     fun getKilometerDistance(): MutableLiveData<String> {
         val df = DecimalFormat("#.#")
         df.roundingMode = RoundingMode.FLOOR
-        var calculateKilo: Double
-        var aliasDistance: String
         if(distance!! >= 1000) {
-            calculateKilo = distance!! / 1000.0
-            aliasDistance = "กม."
+            gDistance = distance!! / 1000.0
+            gAliasDistance = "กม."
         } else {
-            calculateKilo = distance!!.toDouble()
-            aliasDistance = "ม."
+            gDistance = distance!!.toDouble()
+            gAliasDistance = "ม."
         }
 
-        predicKm.value = if(res_lat != null && res_lng != null) df.format(calculateKilo) + aliasDistance else "ไม่มีข้อมูล"
+        predicKm.value = if(res_lat != null && res_lng != null) df.format(gDistance) + gAliasDistance else "ไม่มีข้อมูล"
 
         return predicKm
     }
