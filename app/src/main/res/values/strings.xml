@@ -29,6 +29,9 @@
     <string name="wrongotp">รหัส OTP ผิดพลาด กรุณาตรวจสอบใหม่อีกครั้ง!</string>
     <string name="sendotpsuccess">เรียบร้อย กรุณาตรวจสอบที่ข้อความของคุณ</string>
     <string name="laststeporder">สั่งอาหารสำเร็จแล้ว | กดเพื่อติดตามอาหาร</string>
+    <string name="minminute">เวลาที่สามารถรอได้สูงสุด *หากมีเวลารอจำกัด</string>
+    <string name="hintminminute">คลิกเพื่อเลือกเวลา</string>
+    <string name="hintminprice">ระบุราคาขั้นต่ำ (หากต้องการ)</string>
 
     <string name="facebook_app_id">2500531690173363</string>
     <string name="fb_login_protocol_scheme">fb2500531690173363</string>
@@ -37,4 +40,9 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_traking_map_fragment">Map</string>
+
+    <string name="orderwaittextone">รอการตอบรับ .</string>
+    <string name="orderwaittexttwo">รอการตอบรับ ..</string>
+    <string name="orderwaittextthree">รอการตอบรับ ...</string>
+
 </resources>

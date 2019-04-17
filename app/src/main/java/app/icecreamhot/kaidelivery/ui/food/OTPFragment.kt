@@ -1,13 +1,12 @@
 package app.icecreamhot.kaidelivery.ui.food
 
-import android.content.Intent
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.firebasemodel.OrderFB
 import app.icecreamhot.kaidelivery.model.MenuList
@@ -28,8 +27,22 @@ class OTPFragment: Fragment() {
     private var disposable: Disposable? = null
     private var order: MenuList? = null
 
+    companion object {
+        fun newInstance(menuList: MenuList) = OTPFragment().apply {
+            arguments = Bundle().apply {
+                putParcelable("order", menuList)
+            }
+        }
+    }
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        arguments?.getParcelable<MenuList>("order")?.let {
+            order = it
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        order = arguments!!.getParcelable("order")
         val view = inflater.inflate(R.layout.activity_otp, container, false)
         val btnSendOTP = view.findViewById<Button>(R.id.btnRequestOTP)
         val otpView = view.findViewById<OtpView>(R.id.otp_view)
@@ -121,7 +134,7 @@ class OTPFragment: Fragment() {
 //                manager?.popBackStack(first!!.getId(), FragmentManager.POP_BACK_STACK_INCLUSIVE)
 //            }
 
-            val successFragment = SuccessFragment()
+            val successFragment = SuccessFragment.newInstance(orderList.orderID, orderList.orderName)
             val fm = fragmentManager
             fm?.beginTransaction()
                 ?.replace(R.id.contentContainer, successFragment)
@@ -144,8 +157,8 @@ class OTPFragment: Fragment() {
             View.GONE
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroyView() {
+        super.onDestroyView()
         disposable?.dispose()
     }
 }

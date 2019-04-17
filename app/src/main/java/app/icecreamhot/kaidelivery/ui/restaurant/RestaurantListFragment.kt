@@ -1,14 +1,16 @@
 package app.icecreamhot.kaidelivery.ui.restaurant
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -16,13 +18,17 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.icecreamhot.kaidelivery.R
+import app.icecreamhot.kaidelivery.model.Delivery.Order
 import app.icecreamhot.kaidelivery.model.Restaurant
 import app.icecreamhot.kaidelivery.model.RestaurantType
 import app.icecreamhot.kaidelivery.model.mLatitude
 import app.icecreamhot.kaidelivery.model.mLongitude
+import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.network.RestaurantAPI
 import app.icecreamhot.kaidelivery.network.RestaurantTypesAPI
 import app.icecreamhot.kaidelivery.ui.food.FoodFragment
+import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
+import app.icecreamhot.kaidelivery.ui.order.WatingOrderFragment
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -40,7 +46,9 @@ import kotlinx.android.synthetic.main.activity_restaurant_list.*
 class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener {
 
-    val TAG = "RestaurantListFragment"
+    private val orderAPI by lazy {
+        OrderAPI.create()
+    }
 
     lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
@@ -56,11 +64,15 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
 
     lateinit var recyclerView: RecyclerView
     lateinit var totalEmployee: TextView
+    lateinit var edtMinPrice: EditText
+
+    private var minPrice: Double? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.activity_restaurant_list, container, false)
-        recyclerView  = view!!.findViewById(R.id.restaurantList)
-        totalEmployee = view!!.findViewById(R.id.txtEmployeeTotal)
+        recyclerView  = view.findViewById(R.id.restaurantList)
+        totalEmployee = view.findViewById(R.id.txtEmployeeTotal)
+        edtMinPrice = view.findViewById(R.id.edtMinPrice)
 
         googleApiClient = GoogleApiClient.Builder(context!!)
             .addConnectionCallbacks(this)
@@ -71,10 +83,67 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
         if (googleApiClient != null) {
             googleApiClient!!.connect()
         }
-
         getEmployeeTotal()
 
+        edtMinPrice.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(value: Editable?) {
+                minPrice = value.toString().toDoubleOrNull()
+            }
+
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(text: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+        })
+
         return view
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        checkDeliveryIsExist()
+    }
+
+    private fun checkDeliveryIsExist() {
+        disposable = orderAPI.getDeliveryNow()
+            .subscribeOn(Schedulers.io())
+            .unsubscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { onRetrieveRestaurantListStart() }
+            .doOnTerminate { onRetrieveRestaurantListFinish() }
+            .subscribe(
+                {
+                        result -> afterCheckOrderExist(result.orderList?.get(0))
+
+                },
+                {
+                        err ->  Log.d("errza", err.message)
+                }
+            )
+    }
+
+    private fun afterCheckOrderExist(orderList: Order?) {
+        if(orderList?.order_name != null) {
+            var goFragement = Fragment()
+            when(orderList.order_status) {
+                "0" -> {
+                    goFragement = WatingOrderFragment.newInstance(orderList.order_id, orderList.order_name)
+                }
+                "1" -> {
+                    goFragement = TrackingMapFragment()
+                }
+            }
+            val fm = fragmentManager
+            fm?.beginTransaction()
+                ?.replace(R.id.contentContainer, goFragement)
+                ?.commitAllowingStateLoss()
+        } else {
+            loadRestaurantTypes()
+        }
     }
 
     private fun getEmployeeTotal() {
@@ -114,8 +183,6 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
                     location: Location ->
                 mLatitude = location.latitude
                 mLongitude = location.longitude
-
-                loadRestaurantTypes()
             }
     }
 
@@ -151,6 +218,8 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     }
 
     private fun loadRestaurantTypes() {
+        disposable = null
+        Log.d("error", "nono")
         disposable = restaurantTypeAPI.getRestaurantTypes()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -195,10 +264,7 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
         }
 
         RestaurantListAdapterFragment.onItemClick = { restaurant ->
-            val foodFragment = FoodFragment()
-            val arguments = Bundle()
-            arguments.putInt("res_id", restaurant!!.res_id)
-            foodFragment.arguments = arguments
+            val foodFragment = FoodFragment.newInstance(restaurant?.res_id, minPrice)
 
             val transaction = fragmentManager
             transaction?.beginTransaction()
@@ -216,8 +282,8 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
         loadingRestaurant.visibility  = View.GONE
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroyView() {
+        super.onDestroyView()
         disposable?.dispose()
     }
 }

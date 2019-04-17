@@ -80,9 +80,9 @@ class MapFragment: Fragment(), OnMapReadyCallback, GoogleMap.OnCameraMoveListene
             mMap.setMinZoomPreference(11f)
 
             val latlng = LatLng(mLatitude, mLongitude)
+            mMap.addMarker(MarkerOptions().position(latlng).title("you"))
             moveCamera(CameraUpdateFactory.newLatLng(latlng))
             animateCamera(CameraUpdateFactory.zoomTo(17f))
-            mMap.addMarker(MarkerOptions().position(latlng).title("you"))
 
             setOnCameraMoveListener(this@MapFragment)
             setOnCameraIdleListener(this@MapFragment)

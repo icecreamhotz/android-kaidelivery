@@ -1,8 +1,8 @@
-package app.icecreamhot.kaidelivery.model.Delivery
+package app.icecreamhot.kaidelivery.model.OrderAndFoodDetail
 
 import com.google.gson.annotations.SerializedName
 
-data class Order(
+data class Order (
     val order_id: Int,
     val order_name: String,
     val order_details: String?,
@@ -26,10 +26,12 @@ data class Order(
     val order_discount: Double?,
     val order_date: String,
     val order_start: String,
-    @SerializedName("user")
-    val user: User?,
-    @SerializedName("restaurant")
-    val restaurant: Restaurant?,
+    val created_at: String,
+    val updated_at: String,
     @SerializedName("orderdetails")
-    val orderDetail: ArrayList<OrderTotalPrice>
+    val order_detail: ArrayList<OrderDetail>,
+    @SerializedName("employee")
+    val employee: Employee,
+    @SerializedName("user")
+    val user: User
 )

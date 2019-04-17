@@ -8,15 +8,20 @@ import io.github.luizgrp.sectionedrecyclerviewadapter.StatelessSection
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.data.menu
+import app.icecreamhot.kaidelivery.data.totalPrice
 import app.icecreamhot.kaidelivery.model.Food
 import app.icecreamhot.kaidelivery.model.Menu
 import app.icecreamhot.kaidelivery.utils.BASE_URL_FOOD_IMG
 import com.bumptech.glide.Glide
 
-class FoodListAdapter constructor(val headerList: String, val itemList: List<Food>, val foodImg: Array<String>?, val clickListener: () -> Unit): StatelessSection(SectionParameters.builder()
-        .itemResourceId(R.layout.content_food_list)
-        .headerResourceId(R.layout.header_food_list)
-        .build()) {
+class FoodListAdapter constructor(
+    val headerList: String,
+    val itemList: List<Food>,
+    val foodImg: Array<String>?,
+    val clickListener: () -> Unit): StatelessSection(SectionParameters.builder()
+    .itemResourceId(R.layout.content_food_list)
+    .headerResourceId(R.layout.header_food_list)
+    .build()) {
 
     internal inner class MyItemViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         var tvFoodName : TextView
@@ -56,7 +61,7 @@ class FoodListAdapter constructor(val headerList: String, val itemList: List<Foo
         var index = 1
 
         // bind your view here
-        itemHolder.tvFoodName.text = "${itemList.get(position).food_name}"
+        itemHolder.tvFoodName.text = itemList.get(position).food_name
         itemHolder.tvFoodPrice.text = "${itemList.get(position).food_price} บาท"
 
         for(img in foodImg.orEmpty()) {
@@ -74,7 +79,7 @@ class FoodListAdapter constructor(val headerList: String, val itemList: List<Foo
             val foodName = itemList.get(position).food_name
             val foodPrice = itemList.get(position).food_price.toDouble()
 
-            var checkDuplicateMenu = menu.filter{ it.food_id == foodId }
+            val checkDuplicateMenu = menu.filter{ it.food_id == foodId }
 
             if(checkDuplicateMenu.isNotEmpty()) {
                 val iterator = menu.iterator()
@@ -93,13 +98,15 @@ class FoodListAdapter constructor(val headerList: String, val itemList: List<Foo
                 itemHolder.tvTotal.text = "1"
             }
             Log.d("menu", menu.toString())
-
+            totalPrice += foodPrice
             clickListener()
         }
 
         itemHolder.btDelete.setOnClickListener {
             val foodId = itemList.get(position).food_id
-            var checkDuplicateMenu = menu.filter{ it.food_id == foodId }
+            val foodPrice = itemList.get(position).food_price.toDouble()
+
+            val checkDuplicateMenu = menu.filter{ it.food_id == foodId }
 
             if(checkDuplicateMenu.isNotEmpty()) {
                 val iterator = menu.iterator()
@@ -116,6 +123,7 @@ class FoodListAdapter constructor(val headerList: String, val itemList: List<Foo
                         Log.d("menu", menu.toString())
                     }
                 }
+                totalPrice -= foodPrice
                 clickListener()
             }
         }

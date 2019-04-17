@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import app.icecreamhot.kaidelivery.R
+import app.icecreamhot.kaidelivery.ui.food.ConfirmFoodFragment
 import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
+import app.icecreamhot.kaidelivery.ui.order.WatingOrderFragment
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main_fragment.*
@@ -46,4 +48,5 @@ class MainFragment : AppCompatActivity() {
         fragmentTransaction.replace(R.id.contentContainer, fragment)
         fragmentTransaction.commit()
     }
+
 }

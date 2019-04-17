@@ -14,6 +14,7 @@ data class MenuList(
     val order_start: String,
     val order_details: String?,
     val endpoint_details: String?,
+    val min_minute: Int,
     @SerializedName("menu")
     val menus: List<Menu>? = null
 ) : Parcelable {
@@ -27,6 +28,7 @@ data class MenuList(
         source.readString(),
         source.readString(),
         source.readString(),
+        source.readInt(),
         source.createTypedArrayList(Menu.CREATOR)
     )
 
@@ -42,6 +44,7 @@ data class MenuList(
         writeString(order_start)
         writeString(order_details)
         writeString(endpoint_details)
+        writeInt(min_minute)
         writeTypedList(menus)
     }
 

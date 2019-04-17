@@ -60,27 +60,28 @@ class ConfirmFoodActivity : AppCompatActivity() {
     }
 
     private fun saveOrderToDB() {
-        val timenow = Calendar.getInstance()
-        val hour = timenow.get(Calendar.HOUR_OF_DAY)
-        val minute = timenow.get(Calendar.MINUTE)
-        val second = timenow.get(Calendar.SECOND)
-
-        val order = MenuList(res_id,
-            rateListArray!!.get(0).rate_id,
-            btnSearchLocation.text.toString().trim(),
-            mRestaurantLatitude,
-            mRestaurantLongitude,
-            deliveryPrice.toDouble(),
-            "${hour}:${minute}:${second}",
-            edtOrderDetails.text.toString().trim(),
-            edtEndpointDetails.text.toString().trim(),
-            menu)
-
-        Log.d("order", order.toString())
-
-        val intent = Intent(this, OTPActivity::class.java)
-        intent.putExtra("order", order)
-        startActivity(intent)
+//        val timenow = Calendar.getInstance()
+//        val hour = timenow.get(Calendar.HOUR_OF_DAY)
+//        val minute = timenow.get(Calendar.MINUTE)
+//        val second = timenow.get(Calendar.SECOND)
+//
+//        val order = MenuList(res_id,
+//            rateListArray!!.get(0).rate_id,
+//            btnSearchLocation.text.toString().trim(),
+//            mRestaurantLatitude,
+//            mRestaurantLongitude,
+//            deliveryPrice.toDouble(),
+//            "${hour}:${minute}:${second}",
+//            edtOrderDetails.text.toString().trim(),
+//            edtEndpointDetails.text.toString().trim(),
+//            minMinute,
+//            menu)
+//
+//        Log.d("order", order.toString())
+//
+//        val intent = Intent(this, OTPActivity::class.java)
+//        intent.putExtra("order", order)
+//        startActivity(intent)
     }
 
     private fun getRatePrice() {

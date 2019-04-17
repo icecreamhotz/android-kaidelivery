@@ -51,8 +51,8 @@ class RestaurantListAdapterFragment @Inject constructor(private val items: List<
         var distance: Int? = null
 
         fun bind(restaurant: Restaurant?) {
-            val res_logo = if (restaurant?.res_logo == null) "noimg.png" else restaurant?.res_logo
-            val image = BASE_URL_RESTAURANT_IMG + res_logo
+            val res_logo = if (restaurant?.res_logo == null) "noimg.png" else restaurant.res_logo
+            val image = "${BASE_URL_RESTAURANT_IMG}${res_logo}"
             itemView.apply {
                 res_name.text = restaurant?.res_name
 

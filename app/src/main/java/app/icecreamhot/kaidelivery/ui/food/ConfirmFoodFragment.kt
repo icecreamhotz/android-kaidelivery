@@ -1,6 +1,7 @@
 package app.icecreamhot.kaidelivery.ui.food
 
-import android.content.Intent
+import android.app.Dialog
+import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.os.Build
@@ -10,6 +11,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.NumberPicker
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,15 +23,16 @@ import app.icecreamhot.kaidelivery.data.menu
 import app.icecreamhot.kaidelivery.model.*
 import app.icecreamhot.kaidelivery.network.RateAPI
 import app.icecreamhot.kaidelivery.ui.map.MapFragment
-import app.icecreamhot.kaidelivery.ui.map.MapsActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_confirm_food.*
+import kotlinx.android.synthetic.main.activity_confirm_food.view.*
 import java.lang.Exception
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
+import kotlin.collections.ArrayList
 
 class ConfirmFoodFragment: Fragment() {
 
@@ -37,45 +41,103 @@ class ConfirmFoodFragment: Fragment() {
     private var disposable: Disposable? = null
     private var res_id: Int = 0
     private var rateListArray: List<Rate>? = null
-    var totalPrice = 0.0
-    var deliveryPrice = 0
-    var totalPriceAndDeliveryPrice = 0.0
+    private var totalPrice = 0.0
+    private var deliveryPrice = 0
+    private var totalPriceAndDeliveryPrice = 0.0
 
-    lateinit var recyclerViewOrder: RecyclerView
-    lateinit var vBtnSearchLocation: Button
-    lateinit var vBtnConfirmOrder: Button
+    private lateinit var layoutView: View
+    var minMinute = 0
+
+    companion object {
+        fun newInstance(res_id: Int) = ConfirmFoodFragment().apply {
+            arguments = Bundle().apply {
+                res_id?.let {
+                    putInt("res_id", res_id)
+                }
+            }
+        }
+    }
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        arguments?.getInt("res_id")?.let {
+            res_id = it
+        }
+    }
+
+    val setOnClickMinMinute = View.OnClickListener {
+        val d = Dialog(activity!!)
+        d.setTitle("เลือกเวลา")
+        d.setContentView(R.layout.minute_dialog)
+        val btnOk = d.findViewById<Button>(R.id.btnSetMinuteDialog)
+        val btnCancel = d.findViewById<Button>(R.id.btnCancelMinuteDialog)
+        val txtMinMinute = d.findViewById<TextView>(R.id.txtMinute)
+        txtMinMinute.text = if(minMinute == 0) "5" else minMinute.toString()
+
+        val minuteValue = ArrayList<String>()
+        var i = 5
+        while (i <= 60) {
+            minuteValue.add(String.format("%02d", i))
+            i += 5
+        }
+
+        val noPicker = d.findViewById<NumberPicker>(R.id.minutePicker)
+        noPicker.apply {
+            minValue = 0
+            maxValue = (60/5) - 1
+            wrapSelectorWheel = false
+            descendantFocusability = NumberPicker.FOCUS_BLOCK_DESCENDANTS
+            displayedValues = minuteValue.toArray(arrayOfNulls<String>(minuteValue.size))
+        }
+
+        btnOk.setOnClickListener {
+            minMinute = minuteValue[noPicker.value].toInt()
+            txtMinMinute.text = "${minuteValue[noPicker.value]} นาที"
+            layoutView.minMinute.hint = "${minuteValue[noPicker.value]} นาที"
+            d.dismiss()
+        }
+
+        btnCancel.setOnClickListener {
+            d.dismiss()
+        }
+        d.show()
+    }
+
+    val locationClickListener = View.OnClickListener { _ ->
+        val mapFragment = MapFragment()
+        val args = Bundle()
+        args.putInt("res_id", res_id)
+        mapFragment.arguments = args
+
+        val transaction = fragmentManager
+        transaction?.beginTransaction()
+            ?.replace(R.id.contentContainer, mapFragment)
+            ?.addToBackStack(null)
+            ?.commit()
+    }
+
+    val confirmOrderClickListener = View.OnClickListener { _ ->
+        saveOrderToDB()
+    }
+
+    val onClickClearMinMinute = View.OnClickListener {
+        minMinute = 0
+        layoutView.minMinute.hint = ""
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.activity_confirm_food, container, false)
-        recyclerViewOrder = view.findViewById(R.id.orderList)
-        vBtnSearchLocation = view.findViewById(R.id.btnSearchLocation)
-        vBtnConfirmOrder = view.findViewById(R.id.btConfirmOrder)
+        layoutView = inflater.inflate(R.layout.activity_confirm_food, container, false)
 
-        res_id = arguments!!.getInt("res_id")
+        layoutView.btnSearchLocation.setOnClickListener(locationClickListener)
+        layoutView.btConfirmOrder.setOnClickListener(confirmOrderClickListener)
+        layoutView.minMinute.setOnClickListener(setOnClickMinMinute)
+        layoutView.btnCancelMinMinute.setOnClickListener(onClickClearMinMinute)
 
         getRatePrice()
         setMenuToAdapter()
         setNowLocation()
 
-        val locationClickListener = View.OnClickListener { _ ->
-            var mapFragment = MapFragment()
-            var args = Bundle()
-            args.putInt("res_id", res_id)
-            mapFragment.arguments = args
-
-            val transaction = fragmentManager
-            transaction?.beginTransaction()
-                ?.replace(R.id.contentContainer, mapFragment)
-                ?.addToBackStack(null)
-                ?.commit()
-        }
-        val confirmOrderClickListener = View.OnClickListener { _ ->
-            saveOrderToDB()
-        }
-        vBtnSearchLocation.setOnClickListener(locationClickListener)
-        vBtnConfirmOrder.setOnClickListener(confirmOrderClickListener)
-
-        return view
+        return layoutView
     }
 
     private fun saveOrderToDB() {
@@ -93,19 +155,15 @@ class ConfirmFoodFragment: Fragment() {
             "${hour}:${minute}:${second}",
             edtOrderDetails.text.toString().trim(),
             edtEndpointDetails.text.toString().trim(),
+            minMinute,
             menu
         )
 
         Log.d("order", order.toString())
 
-        var OTPFragment = OTPFragment()
-        var args = Bundle()
-        args.putParcelable("order", order)
-        OTPFragment.arguments = args
-
         val transaction = fragmentManager
         transaction?.beginTransaction()
-            ?.replace(R.id.contentContainer, OTPFragment)
+            ?.replace(R.id.contentContainer, OTPFragment.newInstance(order))
             ?.addToBackStack(null)
             ?.commit()
     }
@@ -127,7 +185,7 @@ class ConfirmFoodFragment: Fragment() {
     private fun setMenuToAdapter() {
         val confirmFoodAdapter = ConfirmFoodAdapter(menu)
 
-        recyclerViewOrder.apply {
+        layoutView.orderList.apply {
             layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             adapter = confirmFoodAdapter
         }
@@ -193,6 +251,7 @@ class ConfirmFoodFragment: Fragment() {
         try {
             val geocoder = Geocoder(activity?.applicationContext, Locale.getDefault())
             val address: List<Address> = geocoder.getFromLocation(mLatitude, mLongitude, 1)
+            Log.d("kuy", mLatitude.toString())
             if(address.isEmpty()) {
                 btnSearchLocation.text = resources.getString(R.string.loadinglocation)
             } else {
@@ -211,8 +270,9 @@ class ConfirmFoodFragment: Fragment() {
         setNowLocation()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroyView() {
+        super.onDestroyView()
         disposable?.dispose()
     }
+
 }

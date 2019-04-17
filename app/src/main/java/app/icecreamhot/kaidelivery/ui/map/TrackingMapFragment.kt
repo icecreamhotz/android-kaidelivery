@@ -4,12 +4,13 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.AsyncTask
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import app.icecreamhot.kaidelivery.R
@@ -17,11 +18,10 @@ import app.icecreamhot.kaidelivery.firebasemodel.OrderFB
 import app.icecreamhot.kaidelivery.model.Delivery.GoogleMapDTO
 import app.icecreamhot.kaidelivery.model.Delivery.Order
 import app.icecreamhot.kaidelivery.network.OrderAPI
+import app.icecreamhot.kaidelivery.ui.Alert.FoodDetailDialog
+import app.icecreamhot.kaidelivery.ui.order.OrderDoned
+import com.google.android.gms.maps.*
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.database.*
 import com.google.gson.Gson
@@ -32,49 +32,61 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.lang.Exception
 
-class TrackingMapFragment : Fragment(), OnMapReadyCallback {
+class TrackingMapFragment : Fragment() {
 
-    private lateinit var mMap: GoogleMap
+    private var mMap: GoogleMap? = null
+    lateinit var mMapView: MapView
+    lateinit var txtStatusOrder: TextView
+    lateinit var btnOrderDetail: Button
+
     private var disposable: Disposable? = null
     private val orderAPI by lazy {
         OrderAPI.create()
     }
 
+    private lateinit var restaurant: LatLng
     private lateinit var endpoint: LatLng
-    private lateinit var markerEmployee: Marker
+    private var markerEmployee: Marker? = null
+    private lateinit var markerRestaurant: Marker
     private lateinit var markerEndpoint: Marker
     private var polyline: Polyline? = null
 
     private lateinit var ref: DatabaseReference
+    private var order_name:String? = null
+    private var order_status: Int? = null
+
+    lateinit var mOrder: ArrayList<app.icecreamhot.kaidelivery.model.OrderAndFoodDetail.Order>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
-        mapFragment?.getMapAsync(this)
+        val view = inflater.inflate(R.layout.activity_traking_map_fragment, container, false)
+        mMapView = view.findViewById(R.id.mapView)
+        txtStatusOrder = view.findViewById(R.id.txtStatusOrder)
+        btnOrderDetail = view.findViewById(R.id.btnOrderDetail)
+        mMapView.onCreate(savedInstanceState)
 
+        mMapView.onResume()
 
-        return inflater.inflate(R.layout.activity_traking_map_fragment, container, false)
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(ContextCompat.checkSelfPermission(activity!!.applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                mMap.isMyLocationEnabled = true
+        mMapView.getMapAsync(object: OnMapReadyCallback  {
+            override fun onMapReady(googleMap: GoogleMap?) {
+                mMap = googleMap
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if(ContextCompat.checkSelfPermission(activity!!.applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        mMap?.isMyLocationEnabled = true
+                    }
+                }
+                else {
+                    mMap?.isMyLocationEnabled = true
+                }
+                loadDeliveryNow()
             }
+        })
+
+        btnOrderDetail.setOnClickListener {
+            val dialogDetailFragment = FoodDetailDialog.newInstance(mOrder)
+            dialogDetailFragment.show(fragmentManager, "OrderDetailFragment")
         }
-        else {
-            mMap.isMyLocationEnabled = true
-        }
-        loadDeliveryNow()
+
+        return view
     }
 
     private fun loadDeliveryNow() {
@@ -85,7 +97,8 @@ class TrackingMapFragment : Fragment(), OnMapReadyCallback {
 //            .doOnTerminate { loadingOrder.visibility = View.GONE }
             .subscribe(
                 {
-                        result -> setMarkerRestaurant(result.orderList)
+                        result -> getOrderStatus(result.orderList)
+                        loadOrderDetail(result.orderList?.get(0)?.order_id)
                 },
                 {
                         err -> Log.d("err", err.message)
@@ -93,45 +106,121 @@ class TrackingMapFragment : Fragment(), OnMapReadyCallback {
             )
     }
 
-    private fun setMarkerRestaurant(orderList: ArrayList<Order>?) {
+    private fun loadOrderDetail(order_id: Int?) {
+        disposable = orderAPI.getOrderAndOrderDetail(order_id!!)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
+//            .doOnTerminate { loadingOrder.visibility = View.GONE }
+            .subscribe(
+                {
+                        result -> mOrder = result.data
+                },
+                {
+                        err -> Log.d("err", err.message)
+                }
+            )
+    }
 
-            endpoint = LatLng(orderList!!.get(0)!!.restaurant!!.res_lat, orderList!!.get(0)!!.restaurant!!.res_lng)
+    private fun getOrderStatus(orderList: ArrayList<Order>?) {
+        setAllMarker(orderList)
 
+        order_name = orderList!!.get(0).order_name
+
+        order_name?.let {
             ref = FirebaseDatabase.getInstance().getReference("Delivery")
-
-            ref.child(orderList!!.get(0)!!.order_name).addValueEventListener(object: ValueEventListener {
+            ref.child(it).child("status").addValueEventListener(object: ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
                 override fun onDataChange(p0: DataSnapshot) {
-
-                    val empLatLng = p0.getValue(OrderFB::class.java)
-                    Log.d("latlng", empLatLng.toString())
-                    val now = LatLng(empLatLng!!.latitude, empLatLng!!.longitude)
-
-                    val markerOptionEmployee = MarkerOptions()
-                    markerOptionEmployee.position(now)
-                    markerEmployee = mMap.addMarker(markerOptionEmployee)
-                    markerEmployee.title = "Employee"
-                    markerEmployee.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-
-                    mMap.uiSettings.isZoomControlsEnabled = true
-                    mMap.setMinZoomPreference(11f)
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(now))
-                    mMap.animateCamera(CameraUpdateFactory.zoomTo(17f))
-
-                    val url = getURL(now, endpoint)
-                    GetDirection(url).execute()
+                    if(p0.value == null) {
+                        val goFragement = OrderDoned.newInstance(orderList.get(0).order_name)
+                        val fm = fragmentManager
+                        fm?.beginTransaction()
+                        ?.replace(R.id.contentContainer, goFragement)
+                        ?.commitAllowingStateLoss()
+                    } else {
+                        order_status = p0.getValue(Int::class.java)
+                        setMarkerRestaurant()
+                    }
                 }
             })
+        }
+    }
 
-            val markerOptionRestaurant = MarkerOptions()
-            markerOptionRestaurant.position(endpoint)
-            markerEndpoint = mMap.addMarker(markerOptionRestaurant)
-            markerEndpoint.title = orderList!!.get(0)!!.restaurant!!.res_name
-            markerEndpoint.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+    private fun setAllMarker(orderList: ArrayList<Order>?) {
+        restaurant = LatLng(orderList!!.get(0).restaurant!!.res_lat, orderList.get(0).restaurant!!.res_lng)
+        endpoint = LatLng(orderList.get(0).endpoint_lat, orderList.get(0).endpoint_lng)
 
+        val markerOptionRestaurant = MarkerOptions()
+        markerOptionRestaurant.position(restaurant)
+        markerRestaurant = mMap!!.addMarker(markerOptionRestaurant)
+        markerRestaurant.title = orderList.get(0).restaurant!!.res_name
+        markerRestaurant.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+
+        val markerOptionEndpoint = MarkerOptions()
+        markerOptionEndpoint.position(endpoint)
+        markerEndpoint = mMap!!.addMarker(markerOptionEndpoint)
+        markerEndpoint.title = orderList.get(0).endpoint_name
+        markerEndpoint.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+    }
+
+    private fun setMarkerRestaurant() {
+        ref = FirebaseDatabase.getInstance().getReference("Delivery")
+        ref.child(order_name!!).addValueEventListener(object: ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                Log.d("err", p0.toString())
+            }
+
+            override fun onDataChange(p0: DataSnapshot) {
+                markerEmployee?.let {
+                    it.remove()
+                }
+
+                if(p0.value != null) {
+                    val empLatLng = p0.getValue(OrderFB::class.java)
+
+                    val now = LatLng(empLatLng!!.latitude, empLatLng.longitude)
+
+                    if(markerEmployee == null) {
+                        val markerOptionEmployee = MarkerOptions()
+                        markerOptionEmployee.position(now).title("Employee").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        markerEmployee = mMap!!.addMarker(markerOptionEmployee)
+                    } else {
+                        markerEmployee?.remove()
+                        val markerOptionEmployee = MarkerOptions()
+                        markerOptionEmployee.position(now).title("Employee").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                        markerEmployee = mMap!!.addMarker(markerOptionEmployee)
+                    }
+
+                    mMap?.uiSettings?.isZoomControlsEnabled = true
+                    mMap?.setMinZoomPreference(11f)
+                    mMap?.moveCamera(CameraUpdateFactory.newLatLng(now))
+                    mMap?.animateCamera(CameraUpdateFactory.zoomTo(17f))
+
+                    order_status?.let {
+                        if(it == 3 || it == 4) {
+                            if(it == 3) {
+                                txtStatusOrder.text = "สถานะ : กำลังจัดส่งอาหาร"
+                            } else if(it == 4) {
+                                txtStatusOrder.text = "สถานะ : ถึงแล้ว"
+                            }
+                            val url = getURL(now, endpoint)
+                            GetDirection(url).execute()
+                            markerRestaurant.remove()
+                        } else {
+                            if(it == 1) {
+                                txtStatusOrder.text = "สถานะ : รับออเดอร์แล้ว"
+                            } else if(it == 2) {
+                                txtStatusOrder.text = "สถานะ : กำลังรออาหาร"
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private fun getURL(from : LatLng, to : LatLng) : String {
@@ -172,7 +261,7 @@ class TrackingMapFragment : Fragment(), OnMapReadyCallback {
                 lineoption.color(Color.BLUE)
                 lineoption.geodesic(true)
             }
-            polyline = mMap.addPolyline(lineoption)
+            polyline = mMap!!.addPolyline(lineoption)
         }
     }
 
@@ -211,5 +300,30 @@ class TrackingMapFragment : Fragment(), OnMapReadyCallback {
         }
 
         return poly
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mMapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mMapView.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mMapView.onDestroy()
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        mMapView.onLowMemory()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        disposable?.dispose()
     }
 }

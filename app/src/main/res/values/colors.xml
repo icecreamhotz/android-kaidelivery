@@ -7,4 +7,6 @@
     <color name="colorButtonContinueOrder">#ffa726</color>
     <color name="colorSuccess">#00e676</color>
     <color name="colorGray">#c7ccd6</color>
+    <color name="colorError">#c62828</color>
+    <color name="colorWhite">#FFFFFF</color>
 </resources>
