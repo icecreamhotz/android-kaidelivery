@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginVertical="10dp"
+            android:orientation="vertical"
+    >
+
+        <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/empImage"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center_horizontal"
+        />
+
+        <TextView
+                android:id="@+id/empName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kiadtisak Lowongsa"
+                android:layout_gravity="center_horizontal"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="5dp"
+        />
+
+        <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                app:cardCornerRadius="4dp"
+                app:contentPaddingLeft="10dp"
+                app:contentPaddingRight="10dp"
+                app:contentPaddingTop="10dp"
+                app:contentPaddingBottom="10dp"
+                android:layout_marginTop="10dp">
+
+            <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+            >
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="จาก"
+                        android:layout_gravity="left"
+                        android:textStyle="bold"
+                />
+
+                <TextView
+                        android:id="@+id/orderRestaurant"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="เต๋อตำยำระเบิด"
+                        android:layout_gravity="left"
+                        android:paddingLeft="10dp"
+                />
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ส่ง"
+                        android:layout_gravity="left"
+                        android:textStyle="bold"
+                />
+
+                <TextView
+                        android:id="@+id/orderEndpoint"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ราชมงคล"
+                        android:layout_gravity="left"
+                        android:paddingLeft="10dp"
+                />
+
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                >
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ค่าอาหาร"
+                            android:layout_gravity="left"
+                            android:textStyle="bold"
+                    />
+
+                    <TextView
+                            android:id="@+id/txtCalFood"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100B"
+                            android:layout_gravity="right"
+                            android:paddingLeft="10dp"
+                    />
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                >
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ค่าอาหาร"
+                            android:layout_gravity="left"
+                            android:textStyle="bold"
+                    />
+
+                    <TextView
+                            android:id="@+id/txtCalDelivery"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100B"
+                            android:layout_gravity="right"
+                            android:paddingLeft="10dp"
+                    />
+                </LinearLayout>
+
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                >
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="ค่าอาหาร"
+                            android:layout_gravity="left"
+                            android:textStyle="bold"
+                    />
+
+                    <TextView
+                            android:id="@+id/txtCalFoodAndDelivery"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="100B"
+                            android:layout_gravity="right"
+                            android:paddingLeft="10dp"
+                    />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <RatingBar
+                android:id="@+id/ratingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:stepSize="1"
+                android:numStars="5"
+                android:progressTint="@color/colorSuccess"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+        />
+
+        <EditText
+                android:id="@+id/edtComplaint"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="3"
+                android:gravity="top|left"
+                android:scrollbars="vertical"
+                android:hint="คำแนะนำ"
+                android:layout_gravity="center_horizontal"
+        />
+
+        <Button
+                android:id="@+id/btnSaveRate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="ตกลง"
+                android:textColor="#FFF"
+                android:background="@drawable/btn_accept"
+                android:layout_marginTop="25dp"
+                android:layout_marginLeft="50dp"
+                android:layout_marginRight="50dp"
+                android:layout_marginBottom="25dp"/>
+
+    </LinearLayout>
+
+
+</androidx.core.widget.NestedScrollView>
