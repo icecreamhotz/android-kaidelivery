@@ -31,5 +31,7 @@ data class Order(
     @SerializedName("restaurant")
     val restaurant: Restaurant?,
     @SerializedName("orderdetails")
-    val orderDetail: ArrayList<OrderTotalPrice>
+    val orderDetail: ArrayList<OrderTotalPrice>,
+    @SerializedName("employee")
+    val employee: Employee?
 )

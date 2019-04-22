@@ -133,7 +133,7 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
                 "0" -> {
                     goFragement = WatingOrderFragment.newInstance(orderList.order_id, orderList.order_name)
                 }
-                "1" -> {
+                "1", "2", "3" -> {
                     goFragement = TrackingMapFragment()
                 }
             }
@@ -218,8 +218,6 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     }
 
     private fun loadRestaurantTypes() {
-        disposable = null
-        Log.d("error", "nono")
         disposable = restaurantTypeAPI.getRestaurantTypes()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

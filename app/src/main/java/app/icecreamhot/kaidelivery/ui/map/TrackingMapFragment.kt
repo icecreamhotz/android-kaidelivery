@@ -10,7 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import app.icecreamhot.kaidelivery.R
@@ -19,12 +21,16 @@ import app.icecreamhot.kaidelivery.model.Delivery.GoogleMapDTO
 import app.icecreamhot.kaidelivery.model.Delivery.Order
 import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.ui.Alert.FoodDetailDialog
+import app.icecreamhot.kaidelivery.ui.chat.ChatFragment
 import app.icecreamhot.kaidelivery.ui.order.OrderDoned
+import app.icecreamhot.kaidelivery.utils.BASE_URL_EMPLOYEE_IMG
+import app.icecreamhot.kaidelivery.utils.BASE_URL_USER_IMG
+import com.bumptech.glide.Glide
 import com.google.android.gms.maps.*
-
 import com.google.android.gms.maps.model.*
 import com.google.firebase.database.*
 import com.google.gson.Gson
+import de.hdodenhof.circleimageview.CircleImageView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -38,6 +44,9 @@ class TrackingMapFragment : Fragment() {
     lateinit var mMapView: MapView
     lateinit var txtStatusOrder: TextView
     lateinit var btnOrderDetail: Button
+    lateinit var txtEmployeeName: TextView
+    lateinit var imgEmployee: CircleImageView
+    lateinit var imgChatButton: ImageButton
 
     private var disposable: Disposable? = null
     private val orderAPI by lazy {
@@ -61,7 +70,11 @@ class TrackingMapFragment : Fragment() {
         val view = inflater.inflate(R.layout.activity_traking_map_fragment, container, false)
         mMapView = view.findViewById(R.id.mapView)
         txtStatusOrder = view.findViewById(R.id.txtStatusOrder)
-        btnOrderDetail = view.findViewById(R.id.btnOrderDetail)
+        btnOrderDetail = view.findViewById<Button>(R.id.btnOrderDetail)
+        txtEmployeeName = view.findViewById(R.id.txtEmployeeName)
+        imgEmployee = view.findViewById(R.id.imgEmployee)
+        imgChatButton = view.findViewById(R.id.imgChat)
+
         mMapView.onCreate(savedInstanceState)
 
         mMapView.onResume()
@@ -97,7 +110,8 @@ class TrackingMapFragment : Fragment() {
 //            .doOnTerminate { loadingOrder.visibility = View.GONE }
             .subscribe(
                 {
-                        result -> getOrderStatus(result.orderList)
+                        result ->
+                        getOrderStatus(result.orderList)
                         loadOrderDetail(result.orderList?.get(0)?.order_id)
                 },
                 {
@@ -123,8 +137,6 @@ class TrackingMapFragment : Fragment() {
     }
 
     private fun getOrderStatus(orderList: ArrayList<Order>?) {
-        setAllMarker(orderList)
-
         order_name = orderList!!.get(0).order_name
 
         order_name?.let {
@@ -142,11 +154,39 @@ class TrackingMapFragment : Fragment() {
                         ?.replace(R.id.contentContainer, goFragement)
                         ?.commitAllowingStateLoss()
                     } else {
+                        val employeeName = "${orderList.get(0).employee?.emp_name} ${orderList.get(0).employee?.emp_lastname}"
+                        val getEmployeeImg = orderList.get(0).employee?.emp_avatar
+                        val employeeImg = BASE_URL_EMPLOYEE_IMG + if(getEmployeeImg == null) "noimg.png" else getEmployeeImg
+                        val getUserImg = orderList?.get(0)?.user?.avatar
+                        val userImg = BASE_URL_USER_IMG + if(getUserImg == null) "noimg.png" else getUserImg
+
                         order_status = p0.getValue(Int::class.java)
                         setMarkerRestaurant()
+                        setAllMarker(orderList)
+                        setEmployeeData(employeeName, userImg, employeeImg)
                     }
                 }
             })
+        }
+    }
+
+    private fun setEmployeeData(employeeName: String, userImg: String, employeeImg: String) {
+        txtEmployeeName.text = employeeName
+        Glide
+            .with(activity!!)
+            .load(employeeImg)
+            .into(imgEmployee)
+        imgChatButton.setOnClickListener {
+            order_name?.let {
+                val chatFragment = ChatFragment.newInstance(it, userImg, employeeImg)
+
+                val transaction= fragmentManager
+                transaction?.beginTransaction()
+                    ?.replace(R.id.contentContainer, chatFragment)
+                    ?.addToBackStack(null)
+                    ?.commit()
+            }
+
         }
     }
 
@@ -175,8 +215,8 @@ class TrackingMapFragment : Fragment() {
             }
 
             override fun onDataChange(p0: DataSnapshot) {
-                markerEmployee?.let {
-                    it.remove()
+                if(markerEmployee != null) {
+                    markerEmployee?.remove()
                 }
 
                 if(p0.value != null) {
@@ -251,8 +291,8 @@ class TrackingMapFragment : Fragment() {
         }
 
         override fun onPostExecute(result: List<List<LatLng>>) {
-            polyline?.let {
-                it.remove()
+            if(polyline != null) {
+                polyline?.remove()
             }
             val lineoption = PolylineOptions()
             for (i in result.indices){
