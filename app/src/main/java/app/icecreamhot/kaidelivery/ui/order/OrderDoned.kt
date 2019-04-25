@@ -6,14 +6,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.RatingBar
-import android.widget.TextView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.model.OrderAndDetail.OrderRate
-import app.icecreamhot.kaidelivery.model.OrderAndFoodDetail.Order
 import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.utils.BASE_URL_EMPLOYEE_IMG
 import com.bumptech.glide.Glide
@@ -21,26 +17,18 @@ import de.hdodenhof.circleimageview.CircleImageView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import org.w3c.dom.Text
 
 class OrderDoned: Fragment() {
-
-    companion object {
-        fun newInstance(order_name: String): OrderDoned {
-            val fragment = OrderDoned()
-            val args = Bundle()
-            args.putString("order_name", order_name)
-            fragment.arguments = args
-            return fragment
-        }
-    }
 
     private val orderAPI by lazy {
         OrderAPI.create()
     }
 
     private var disposable: Disposable? = null
-    private var order_name = ""
+    private var order_id: Int = 0
+    private var user_id: Int = 0
+    private var emp_id: Int = 0
+    private var res_id: Int = 0
 
     lateinit var empImage: CircleImageView
     lateinit var empName: TextView
@@ -53,10 +41,31 @@ class OrderDoned: Fragment() {
     lateinit var edtScore: EditText
     lateinit var btnSave: Button
 
+
+    companion object {
+        fun newInstance(order_id: Int, user_id: Int, emp_id: Int, res_id: Int) =  OrderDoned().apply {
+            arguments = Bundle().apply {
+                putInt("order_id", order_id)
+                putInt("user_id", user_id)
+                putInt("emp_id", emp_id)
+                putInt("res_id", res_id)
+            }
+        }
+    }
+
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-        arguments?.getString("order_name")?.let {
-            order_name = it
+        arguments?.getInt("order_id")?.let {
+            order_id = it
+        }
+        arguments?.getInt("user_id")?.let {
+            user_id = it
+        }
+        arguments?.getInt("emp_id")?.let {
+            emp_id = it
+        }
+        arguments?.getInt("res_id")?.let {
+            res_id = it
         }
     }
 
@@ -79,7 +88,7 @@ class OrderDoned: Fragment() {
     }
 
     private fun loadOrderIsDoned() {
-        disposable = orderAPI.getOrderIsDoned(order_name)
+        disposable = orderAPI.getOrderIsDoned(order_id)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
 //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
@@ -95,6 +104,7 @@ class OrderDoned: Fragment() {
     }
 
     private fun setValueToView(data: ArrayList<OrderRate>) {
+        Log.d("orderdonedata", data.toString())
         val newData = data.get(0)
 
         var fPrice = 0.0
@@ -115,6 +125,43 @@ class OrderDoned: Fragment() {
         foodPrice.text = String.format("%.2f", fPrice)
         deliveryPrice.text = String.format("%.2f", dPrice)
         txtAllPrice.text = String.format("%.2f", aPrice)
+
+        btnSave.setOnClickListener {
+            val comment = edtScore.text.trim().toString()
+            val rating = rateStar.rating.toInt()
+           if(rating != 0) {
+               ifHaveRating(rating, comment)
+           } else {
+               commitOrderDonedRestaurantFragment(order_id, user_id, res_id)
+           }
+        }
     }
+
+    private fun ifHaveRating(rating: Int, comment: String) {
+        disposable = orderAPI.updateEmployeeScoreAfterDelivered(order_id, rating, comment, user_id, emp_id)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
+//            .doOnTerminate { loadingOrder.visibility = View.GONE }
+            .subscribe(
+                {
+                        result -> if(result.status)  {
+                            commitOrderDonedRestaurantFragment(order_id, user_id, res_id)
+                        }
+                },
+                {
+                        err -> Log.d("err", err.message)
+                }
+            )
+    }
+
+    private fun commitOrderDonedRestaurantFragment(order_id: Int, user_id: Int, res_id: Int) {
+        val orderDonedRestaurant = OrderDonedRestaurant.newInstance(order_id, user_id, res_id)
+        val fm = fragmentManager
+        fm?.beginTransaction()
+            ?.replace(R.id.contentContainer, orderDonedRestaurant)
+            ?.commit()
+    }
+
 
 }

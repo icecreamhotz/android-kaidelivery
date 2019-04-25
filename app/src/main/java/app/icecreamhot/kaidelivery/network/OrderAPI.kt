@@ -1,6 +1,7 @@
 package app.icecreamhot.kaidelivery.network
 
 import app.icecreamhot.kaidelivery.model.*
+import app.icecreamhot.kaidelivery.model.OrderAndDetail.OrderHistoryResponse
 import app.icecreamhot.kaidelivery.model.OrderAndDetail.OrderRateResponse
 import app.icecreamhot.kaidelivery.model.OrderAndFoodDetail.OrderResponse
 import app.icecreamhot.kaidelivery.utils.BASE_URL
@@ -18,8 +19,11 @@ interface OrderAPI {
     @GET("orders/{orderId}")
     fun getOrderAndOrderDetail(@Path(value = "orderId", encoded= true) orderId: Int): Observable<OrderResponse>
 
-    @GET("orders/doned/{orderName}")
-    fun getOrderIsDoned(@Path(value = "orderName", encoded= true) orderName: String): Observable<OrderRateResponse>
+    @GET("orders/doned/{orderId}")
+    fun getOrderIsDoned(@Path(value = "orderId", encoded= true) orderId: Int): Observable<OrderRateResponse>
+
+    @GET("orders/history/user")
+    fun getHistoryOrderCustomer(): Observable<OrderHistoryResponse>
 
     @GET("orders/delivery/user/now")
     fun getDeliveryNow(): Observable<app.icecreamhot.kaidelivery.model.Delivery.OrderList>
@@ -32,8 +36,28 @@ interface OrderAPI {
     fun checkValidOTP(@Path("otpcode") otpcode: String): Observable<OneTimePasswordList>
 
     @FormUrlEncoded
-    @POST("orders/delete")
-    fun deleteOrderByID(@Field("order_id") order_id: Int): Observable<ResponseBody>
+    @POST("orders/update/status")
+    fun updateStatusOrder(@Field("order_id") order_id: Int,
+                          @Field("order_status") order_status: Int,
+                          @Field("order_statusdetails") order_statusdetails: String?,
+                          @Field("message") message: String?,
+                          @Field("token") token: String?): Observable<ResponseMAS>
+
+    @FormUrlEncoded
+    @POST("orders/comment/employee")
+    fun updateEmployeeScoreAfterDelivered(@Field("order_id") order_id: Int,
+                                          @Field("rating") rating: Int,
+                                          @Field("comment") comment: String?,
+                                          @Field("user_id") userId: Int,
+                                          @Field("emp_id") empId: Int): Observable<ResponseMAS>
+
+    @FormUrlEncoded
+    @POST("orders/comment/restaurant")
+    fun updateRestaurantScoreAfterDelivered(@Field("order_id") order_id: Int,
+                                            @Field("rating") rating: Int,
+                                            @Field("comment") comment: String?,
+                                            @Field("user_id") userId: Int,
+                                            @Field("res_id") empId: Int): Observable<ResponseMAS>
 
     companion object {
         fun create(): OrderAPI {

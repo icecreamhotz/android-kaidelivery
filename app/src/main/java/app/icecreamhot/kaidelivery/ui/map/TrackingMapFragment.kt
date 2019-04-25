@@ -22,6 +22,7 @@ import app.icecreamhot.kaidelivery.model.Delivery.Order
 import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.ui.Alert.FoodDetailDialog
 import app.icecreamhot.kaidelivery.ui.chat.ChatFragment
+import app.icecreamhot.kaidelivery.ui.comment.CommentFragment
 import app.icecreamhot.kaidelivery.ui.order.OrderDoned
 import app.icecreamhot.kaidelivery.utils.BASE_URL_EMPLOYEE_IMG
 import app.icecreamhot.kaidelivery.utils.BASE_URL_USER_IMG
@@ -47,6 +48,8 @@ class TrackingMapFragment : Fragment() {
     lateinit var txtEmployeeName: TextView
     lateinit var imgEmployee: CircleImageView
     lateinit var imgChatButton: ImageButton
+    lateinit var txtRate: TextView
+    lateinit var txtComment: TextView
 
     private var disposable: Disposable? = null
     private val orderAPI by lazy {
@@ -74,6 +77,8 @@ class TrackingMapFragment : Fragment() {
         txtEmployeeName = view.findViewById(R.id.txtEmployeeName)
         imgEmployee = view.findViewById(R.id.imgEmployee)
         imgChatButton = view.findViewById(R.id.imgChat)
+        txtRate = view.findViewById(R.id.txtRate)
+        txtComment = view.findViewById(R.id.txtComment)
 
         mMapView.onCreate(savedInstanceState)
 
@@ -111,13 +116,37 @@ class TrackingMapFragment : Fragment() {
             .subscribe(
                 {
                         result ->
+                        var rate: Float? = 3.00f // default rate
+                        if(result.orderList?.get(0)?.employee?.emp_score!!.size > 0) {
+                            rate = result.orderList?.get(0)?.employee?.emp_score!!.get(0).rating
+                        }
+                        val orderId = result.orderList.get(0).order_id
+                        val empId = result.orderList.get(0).employee?.emp_id
+                        val newRate = rate?.toInt()
+
+                        setDataRateAndComment(newRate, empId)
                         getOrderStatus(result.orderList)
-                        loadOrderDetail(result.orderList?.get(0)?.order_id)
+                        loadOrderDetail(orderId)
                 },
                 {
-                        err -> Log.d("err", err.message)
+                        err -> Log.d("errdeliverynow", err.message)
                 }
             )
+    }
+
+    private fun setDataRateAndComment(rate: Int?, empId: Int?) {
+        txtRate.text = rate.toString()
+        txtComment.text = "คำติชม"
+        val setOnClickComment = View.OnClickListener {
+            val commentFragment = CommentFragment.newInstance(empId!!)
+
+            val transition = fragmentManager
+            transition?.beginTransaction()
+                ?.replace(R.id.contentContainer, commentFragment)
+                ?.addToBackStack(null)
+                ?.commit()
+        }
+        txtComment.setOnClickListener(setOnClickComment)
     }
 
     private fun loadOrderDetail(order_id: Int?) {
@@ -131,13 +160,14 @@ class TrackingMapFragment : Fragment() {
                         result -> mOrder = result.data
                 },
                 {
-                        err -> Log.d("err", err.message)
+                        err -> Log.d("errorderdetail", err.message)
                 }
             )
     }
 
     private fun getOrderStatus(orderList: ArrayList<Order>?) {
-        order_name = orderList!!.get(0).order_name
+        val order = orderList!!.get(0)
+        order_name = order.order_name
 
         order_name?.let {
             ref = FirebaseDatabase.getInstance().getReference("Delivery")
@@ -148,16 +178,21 @@ class TrackingMapFragment : Fragment() {
 
                 override fun onDataChange(p0: DataSnapshot) {
                     if(p0.value == null) {
-                        val goFragement = OrderDoned.newInstance(orderList.get(0).order_name)
+                        val orderId = order.order_id
+                        val userId = order.user_id
+                        val empId = order.emp_id!!
+                        val resId = order.res_id
+                        val goFragement = OrderDoned.newInstance(orderId, userId, empId, resId)
+
                         val fm = fragmentManager
                         fm?.beginTransaction()
                         ?.replace(R.id.contentContainer, goFragement)
                         ?.commitAllowingStateLoss()
                     } else {
-                        val employeeName = "${orderList.get(0).employee?.emp_name} ${orderList.get(0).employee?.emp_lastname}"
-                        val getEmployeeImg = orderList.get(0).employee?.emp_avatar
+                        val employeeName = "${order.employee?.emp_name} ${order.employee?.emp_lastname}"
+                        val getEmployeeImg = order.employee?.emp_avatar
                         val employeeImg = BASE_URL_EMPLOYEE_IMG + if(getEmployeeImg == null) "noimg.png" else getEmployeeImg
-                        val getUserImg = orderList?.get(0)?.user?.avatar
+                        val getUserImg = order.user?.avatar
                         val userImg = BASE_URL_USER_IMG + if(getUserImg == null) "noimg.png" else getUserImg
 
                         order_status = p0.getValue(Int::class.java)
@@ -268,6 +303,7 @@ class TrackingMapFragment : Fragment() {
     }
 
     private inner class GetDirection(val url : String) : AsyncTask<Void, Void, List<List<LatLng>>>(){
+
         override fun doInBackground(vararg params: Void?): List<List<LatLng>> {
             val client = OkHttpClient()
             val request = Request.Builder().url(url).build()

@@ -16,6 +16,7 @@ import app.icecreamhot.kaidelivery.R
 import app.icecreamhot.kaidelivery.network.EmployeeAPI
 import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.ui.Alert.Dialog
+import app.icecreamhot.kaidelivery.ui.history.HistoryOrderFragment
 import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
 import com.google.firebase.database.*
@@ -119,7 +120,11 @@ class WatingOrderFragment: Fragment() {
         val dialogConfirm = Dialog()
         dialogConfirm.Confirm(activity, "Calcel Order", "Do you need cancel this order really ?"
             ,"Yes", "No", Runnable {
-                disposable = orderAPI.deleteOrderByID(order_id)
+                disposable = orderAPI.updateStatusOrder(order_id,
+                    5 ,
+                    null,
+                    null,
+                    null)
                     .subscribeOn(Schedulers.io())
                     .unsubscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -142,7 +147,7 @@ class WatingOrderFragment: Fragment() {
         ref = FirebaseDatabase.getInstance().getReference("Orders").child(order_name)
         ref.removeValue().addOnSuccessListener {
             Toast.makeText(activity!!.applicationContext, "Cancel Success", Toast.LENGTH_LONG).show()
-            backToRestaurantList()
+            backToHistoryFragment()
         }
     }
 
@@ -236,15 +241,31 @@ class WatingOrderFragment: Fragment() {
 
             override fun onDataChange(p0: DataSnapshot) {
                 if(p0.value == null) {
-                    Toast.makeText(activity!!.applicationContext, "พนักงานได้ยกเลิกออเดอร์ของคุณ", Toast.LENGTH_LONG).show()
-                    backToRestaurantList()
+                    disposable = orderAPI.getOrderAndOrderDetail(order_id!!)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+        //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
+        //            .doOnTerminate { loadingOrder.visibility = View.GONE }
+                        .subscribe(
+                            {
+                                    result ->
+                                    val order = result.data.get(0).order_status
+                                    if(order == "5") {
+                                        Toast.makeText(activity!!.applicationContext, "พนักงานได้ยกเลิกออเดอร์ของคุณ", Toast.LENGTH_LONG).show()
+                                        backToHistoryFragment()
+                                    }
+                            },
+                            {
+                                    err -> Log.d("err", err.message)
+                            }
+                        )
                 }
             }
         })
     }
 
-    private fun backToRestaurantList() {
-        val goFragment = RestaurantListFragment()
+    private fun backToHistoryFragment() {
+        val goFragment = HistoryOrderFragment()
         val fm = fragmentManager
         fm?.beginTransaction()
             ?.replace(R.id.contentContainer, goFragment)

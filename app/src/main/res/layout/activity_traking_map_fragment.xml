@@ -36,23 +36,88 @@
                         android:layout_height="40dp"
                 />
 
-                <TextView
-                        android:id="@+id/txtEmployeeName"
+                <LinearLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        android:textStyle="bold"
-                        android:text="Anucha Phudtapranee"
-                        android:layout_marginLeft="10dp"
-                />
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                >
+
+                    <TextView
+                            android:id="@+id/txtEmployeeName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            android:textStyle="bold"
+                            android:text="Loading..."
+                            android:layout_marginLeft="10dp"
+                            android:textSize="18sp"
+                    />
+
+                    <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                    >
+
+                        <ImageButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:background="@drawable/icon_star"
+                                android:layout_marginLeft="10dp"
+                        />
+
+                        <TextView
+                                android:id="@+id/txtRate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textStyle="bold"
+                                android:text="Loading..."
+                                android:layout_marginLeft="10dp"
+                        />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                    >
+
+                        <ImageButton
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:background="@drawable/icon_history"
+                                android:layout_marginLeft="10dp"
+                        />
+
+                        <TextView
+                                android:id="@+id/txtComment"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:ellipsize="end"
+                                android:textStyle="bold"
+                                android:text="Loading..."
+                                android:layout_marginLeft="10dp"
+                        />
+
+                    </LinearLayout>
+
+                </LinearLayout>
 
                 <ImageButton
                         android:id="@+id/imgChat"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
+                        android:layout_gravity="top"
                         android:background="@drawable/icon_chat"
                         android:layout_marginLeft="10dp"
                 />
@@ -64,7 +129,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="left"
-                    android:text="สถานะ: กำลังรออาหาร"
+                    android:text="Loading..."
                     android:layout_marginTop="10dp"
             />
 

@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import app.icecreamhot.kaidelivery.R
+import app.icecreamhot.kaidelivery.ui.history.HistoryOrderFragment
 import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
+import app.icecreamhot.kaidelivery.ui.order.OrderDoned
+import app.icecreamhot.kaidelivery.ui.order.OrderDonedRestaurant
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.database.DatabaseReference
@@ -30,6 +33,7 @@ class MainFragment : AppCompatActivity() {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.history -> {
+                replaceFragment(HistoryOrderFragment())
                 return@OnNavigationItemSelectedListener true
             }
         }
