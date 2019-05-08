@@ -14,7 +14,7 @@ import retrofit2.http.*
 
 interface OrderAPI {
     @POST("orders/")
-    fun insertOrder(@Body menus: MenuList): Observable<OrderList>
+    fun insertOrder(@Body menus: MenuList, @Header("authorization") token: String): Observable<OrderList>
 
     @GET("orders/{orderId}")
     fun getOrderAndOrderDetail(@Path(value = "orderId", encoded= true) orderId: Int): Observable<OrderResponse>
@@ -23,17 +23,17 @@ interface OrderAPI {
     fun getOrderIsDoned(@Path(value = "orderId", encoded= true) orderId: Int): Observable<OrderRateResponse>
 
     @GET("orders/history/user")
-    fun getHistoryOrderCustomer(): Observable<OrderHistoryResponse>
+    fun getHistoryOrderCustomer(@Header("authorization") token: String): Observable<OrderHistoryResponse>
 
     @GET("orders/delivery/user/now")
-    fun getDeliveryNow(): Observable<app.icecreamhot.kaidelivery.model.Delivery.OrderList>
+    fun getDeliveryNow(@Header("authorization") token: String): Observable<app.icecreamhot.kaidelivery.model.Delivery.OrderList>
 
     @FormUrlEncoded
     @POST("orders/otp")
     fun sendOTPToUser(@Field("telephone") telephone: String): Observable<ResponseBody>
 
-    @GET("orders/otp/{otpcode}")
-    fun checkValidOTP(@Path("otpcode") otpcode: String): Observable<OneTimePasswordList>
+    @GET("orders/otp/{otpcode}/{telephone}")
+    fun checkValidOTP(@Path("otpcode") otpcode: String, @Path("telephone") telephone: String): Observable<OneTimePasswordList>
 
     @FormUrlEncoded
     @POST("orders/update/status")

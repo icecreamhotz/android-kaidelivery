@@ -45,4 +45,7 @@
     <string name="orderwaittexttwo">รอการตอบรับ ..</string>
     <string name="orderwaittextthree">รอการตอบรับ ...</string>
 
+    <string name="senderid">99509912056</string>
+
+    <string name="base64string">kaidelivery</string>
 </resources>

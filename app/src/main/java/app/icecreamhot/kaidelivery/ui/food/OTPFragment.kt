@@ -1,6 +1,7 @@
 package app.icecreamhot.kaidelivery.ui.food
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,6 +14,7 @@ import app.icecreamhot.kaidelivery.firebasemodel.OrderFB
 import app.icecreamhot.kaidelivery.model.MenuList
 import app.icecreamhot.kaidelivery.model.OrderList
 import app.icecreamhot.kaidelivery.network.OrderAPI
+import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.database.FirebaseDatabase
 import com.mukesh.OtpView
@@ -27,6 +29,7 @@ class OTPFragment: Fragment() {
 
     private var disposable: Disposable? = null
     private var order: MenuList? = null
+    private var pref: SharedPreferences? = null
 
     companion object {
         fun newInstance(menuList: MenuList) = OTPFragment().apply {
@@ -41,6 +44,7 @@ class OTPFragment: Fragment() {
         arguments?.getParcelable<MenuList>("order")?.let {
             order = it
         }
+        pref = context?.getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -56,7 +60,7 @@ class OTPFragment: Fragment() {
 
         otpView.setOtpCompletionListener { otp ->
             if(otp.length == 6) {
-                disposable = orderAPI.checkValidOTP(otp)
+                disposable = orderAPI.checkValidOTP(otp, edtTelephone.text.toString())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .doOnSubscribe { onSendOTPStart() }
@@ -65,6 +69,7 @@ class OTPFragment: Fragment() {
                             onValidOTPSuccess()
                         },
                         {
+                            err -> err.printStackTrace()
                             onValidOTPError()
                         }
                     )}
@@ -109,18 +114,22 @@ class OTPFragment: Fragment() {
     }
 
     private fun onValidOTPSuccess() {
-        disposable = orderAPI.insertOrder(order!!)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnTerminate { onSendOTPEnd() }
-            .subscribe(
-                {
-                        result -> onAfterValidOTPSuccess(result)
-                },
-                {
-                        err -> Log.d("errotp", err.toString())
-                }
-            )
+        val token = pref?.getString("token", null)
+        token?.let {
+            disposable = orderAPI.insertOrder(order!!, it)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnTerminate { onSendOTPEnd() }
+                .subscribe(
+                    {
+                            result -> onAfterValidOTPSuccess(result)
+                    },
+                    {
+                            err -> Log.d("errotp", err.toString())
+                    }
+                )
+        }
+
     }
 
     private fun onAfterValidOTPSuccess(orderList: OrderList) {

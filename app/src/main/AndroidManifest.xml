@@ -38,13 +38,13 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
+        
+        <activity
+                android:name=".ui.splash.SplashScreen"
+                android:label="@string/app_name">
+        </activity>
 
         <activity android:name=".ui.MainFragment">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
         <activity android:name=".RegisterActivity">
         </activity>
@@ -84,8 +84,13 @@
         <activity android:name=".ui.restaurant.RestaurantListActivity">
         </activity>
         <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
 
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
+        
     </application>
 
 </manifest>

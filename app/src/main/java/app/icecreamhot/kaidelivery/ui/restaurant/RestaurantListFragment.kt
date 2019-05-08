@@ -1,6 +1,8 @@
 package app.icecreamhot.kaidelivery.ui.restaurant
 
 import android.Manifest
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -29,6 +31,7 @@ import app.icecreamhot.kaidelivery.network.RestaurantTypesAPI
 import app.icecreamhot.kaidelivery.ui.food.FoodFragment
 import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
 import app.icecreamhot.kaidelivery.ui.order.WatingOrderFragment
+import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -67,6 +70,13 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     lateinit var edtMinPrice: EditText
 
     private var minPrice: Double? = null
+
+    private var pref: SharedPreferences? = null
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        pref = context?.getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.activity_restaurant_list, container, false)
@@ -109,21 +119,25 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     }
 
     private fun checkDeliveryIsExist() {
-        disposable = orderAPI.getDeliveryNow()
-            .subscribeOn(Schedulers.io())
-            .unsubscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onRetrieveRestaurantListStart() }
-            .doOnTerminate { onRetrieveRestaurantListFinish() }
-            .subscribe(
-                {
-                        result -> afterCheckOrderExist(result.orderList?.get(0))
+        val token = pref?.getString("token", null)
+        Log.d("jwttoken", token)
+        token?.let {
+            disposable = orderAPI.getDeliveryNow(it)
+                .subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { onRetrieveRestaurantListStart() }
+                .doOnTerminate { onRetrieveRestaurantListFinish() }
+                .subscribe(
+                    {
+                            result -> afterCheckOrderExist(result.orderList?.get(0))
 
-                },
-                {
-                        err ->  Log.d("errza", err.message)
-                }
-            )
+                    },
+                    {
+                            err ->  Log.d("errza", err.message)
+                    }
+                )
+        }
     }
 
     private fun afterCheckOrderExist(orderList: Order?) {
@@ -261,8 +275,8 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
             adapter = RestaurantListAdapterFragment
         }
 
-        RestaurantListAdapterFragment.onItemClick = { restaurant ->
-            val foodFragment = FoodFragment.newInstance(restaurant?.res_id, minPrice)
+        RestaurantListAdapterFragment.onItemClick = { resItem ->
+            val foodFragment = FoodFragment.newInstance(resItem?.res_id, minPrice)
 
             val transaction = fragmentManager
             transaction?.beginTransaction()

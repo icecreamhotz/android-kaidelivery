@@ -8,13 +8,11 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import app.icecreamhot.kaidelivery.model.User
-import app.icecreamhot.kaidelivery.model.UserList
 import app.icecreamhot.kaidelivery.network.UserAPI
 import app.icecreamhot.kaidelivery.ui.MainFragment
 import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.bumptech.glide.request.RequestOptions
 import com.facebook.*
-import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -22,6 +20,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONException
 import org.json.JSONObject
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,12 +56,15 @@ class MainActivity : AppCompatActivity() {
                             disposable = userAPI.loginWithFacebook(provider_id, email, url, name)
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
+                                .doOnSubscribe { onRetrieveStart() }
+                                .doOnTerminate { onRetrieveFinish() }
                                 .subscribe(
                                     {
                                         result -> loginSuccess(result)
                                     },
                                     {
                                         e -> Log.d("err", e.message)
+                                        Toast.makeText(applicationContext, "Something has wrong", Toast.LENGTH_LONG).show()
                                     }
                                 )
 
@@ -84,6 +86,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onError(error: FacebookException?) {
                 Log.d("err", error?.message)
+                Toast.makeText(applicationContext, "Something has wrong", Toast.LENGTH_LONG).show()
             }
 
         })
@@ -102,6 +105,7 @@ class MainActivity : AppCompatActivity() {
     private fun loginSuccess(user: User) {
         val shared = getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
         val editor = shared.edit()
+        editor.putString("user_id", user.userId)
         editor.putString("token", user.token)
         editor.commit()
 
@@ -116,14 +120,26 @@ class MainActivity : AppCompatActivity() {
         disposable = userAPI.loginCommon(username, password)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { onRetrieveStart() }
+            .doOnTerminate { onRetrieveFinish() }
             .subscribe(
                 {
                         result -> loginSuccess(result.arrUserList!!)
                 },
                 {
                         e -> Log.d("err", e.message)
+                        Toast.makeText(applicationContext, "Something has wrong", Toast.LENGTH_LONG).show()
                 }
             )
+    }
+
+
+    private fun onRetrieveStart() {
+        loading.visibility = View.VISIBLE
+    }
+
+    private fun onRetrieveFinish() {
+        loading.visibility  = View.GONE
     }
 
     override fun onPause() {

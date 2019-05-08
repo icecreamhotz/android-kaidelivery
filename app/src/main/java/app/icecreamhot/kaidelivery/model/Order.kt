@@ -21,6 +21,7 @@ data class Order(
     val order_status: String,
     val order_timeout: String?,
     val order_deliveryprice: Double,
+    var order_price: Double,
     val order_discount: Double?,
     val order_date: String,
     val order_start: String

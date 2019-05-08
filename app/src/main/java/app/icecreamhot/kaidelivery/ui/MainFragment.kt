@@ -1,5 +1,6 @@
 package app.icecreamhot.kaidelivery.ui
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +11,7 @@ import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
 import app.icecreamhot.kaidelivery.ui.order.OrderDoned
 import app.icecreamhot.kaidelivery.ui.order.OrderDonedRestaurant
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
+import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -19,7 +21,7 @@ import java.io.IOException
 
 class MainFragment : AppCompatActivity() {
 
-    private val TAG = "MyFirebaseToken"
+    private val TAG = "fcmToken"
     private lateinit var ref: DatabaseReference
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener {item ->
@@ -63,12 +65,14 @@ class MainFragment : AppCompatActivity() {
     private fun initView() {
         Thread(Runnable {
             try {
-                val fcmToken = FirebaseInstanceId.getInstance().getToken("99509912056", "FCM")
+                val fcmToken = FirebaseInstanceId.getInstance().getToken(getString(R.string.senderid), "FCM")
                 fcmToken?.let {
                     Log.i(TAG, it)
+                    val pref = getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
+                    val userId = pref.getString("user_id", "")
                     ref = FirebaseDatabase.getInstance().getReference("FCMToken")
                         .child("users")
-                        .child("86")
+                        .child(userId)
                     ref.setValue(it)
                 }
             } catch (e: IOException) {

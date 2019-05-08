@@ -8,5 +8,7 @@ data class User(
     @SerializedName("token")
     val token: String?,
     @SerializedName("expiresIn")
-    val expiresIn: Int?
+    val expiresIn: Int?,
+    @SerializedName("userId")
+    val userId: String?
 )

@@ -1,5 +1,7 @@
 package app.icecreamhot.kaidelivery.ui.map
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.AsyncTask
@@ -24,8 +26,10 @@ import app.icecreamhot.kaidelivery.ui.Alert.FoodDetailDialog
 import app.icecreamhot.kaidelivery.ui.chat.ChatFragment
 import app.icecreamhot.kaidelivery.ui.comment.CommentFragment
 import app.icecreamhot.kaidelivery.ui.order.OrderDoned
+import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
 import app.icecreamhot.kaidelivery.utils.BASE_URL_EMPLOYEE_IMG
 import app.icecreamhot.kaidelivery.utils.BASE_URL_USER_IMG
+import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.bumptech.glide.Glide
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
@@ -68,6 +72,12 @@ class TrackingMapFragment : Fragment() {
     private var order_status: Int? = null
 
     lateinit var mOrder: ArrayList<app.icecreamhot.kaidelivery.model.OrderAndFoodDetail.Order>
+    private var pref: SharedPreferences? = null
+
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+        pref = context?.getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.activity_traking_map_fragment, container, false)
@@ -108,30 +118,39 @@ class TrackingMapFragment : Fragment() {
     }
 
     private fun loadDeliveryNow() {
-        disposable = orderAPI.getDeliveryNow()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val token = pref?.getString("token", null)
+        token?.let {
+            disposable = orderAPI.getDeliveryNow(it)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
 //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
 //            .doOnTerminate { loadingOrder.visibility = View.GONE }
-            .subscribe(
-                {
-                        result ->
-                        var rate: Float? = 3.00f // default rate
-                        if(result.orderList?.get(0)?.employee?.emp_score!!.size > 0) {
-                            rate = result.orderList?.get(0)?.employee?.emp_score!!.get(0).rating
-                        }
-                        val orderId = result.orderList.get(0).order_id
-                        val empId = result.orderList.get(0).employee?.emp_id
-                        val newRate = rate?.toInt()
+                .subscribe(
+                    { result ->
+                        if(result.orderList?.get(0)?.order_id == 0) {
+                            val fm = fragmentManager
+                            fm?.beginTransaction()
+                                ?.replace(R.id.contentContainer, RestaurantListFragment())
+                                ?.commitAllowingStateLoss()
+                        } else {
+                            var rate: Float? = 3.00f // default rate
+                            if (result.orderList?.get(0)?.employee?.emp_score!!.size > 0) {
+                                rate = result.orderList.get(0).employee?.emp_score!!.get(0).rating
+                            }
+                            val orderId = result.orderList.get(0).order_id
+                            val empId = result.orderList.get(0).employee?.emp_id
+                            val newRate = rate?.toInt()
 
-                        setDataRateAndComment(newRate, empId)
-                        getOrderStatus(result.orderList)
-                        loadOrderDetail(orderId)
-                },
-                {
-                        err -> Log.d("errdeliverynow", err.message)
-                }
-            )
+                            setDataRateAndComment(newRate, empId)
+                            getOrderStatus(result.orderList)
+                            loadOrderDetail(orderId)
+                        }
+                    },
+                    { err ->
+                        Log.d("errdeliverynow", err.message)
+                    }
+                )
+        }
     }
 
     private fun setDataRateAndComment(rate: Int?, empId: Int?) {

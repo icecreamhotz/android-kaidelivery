@@ -52,7 +52,7 @@ class EmployeeCommentAdapter(val scoreCommentList: ArrayList<EmployeeScore>): Re
 
         fun getDateTime(s: String): String? {
             var parsed: Date? = null
-            var outputDate = ""
+            var outputDate: String
             var df_input = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
             var df_output = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
