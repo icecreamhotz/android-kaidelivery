@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 {
                         e -> Log.d("err", e.message)
-                        Toast.makeText(applicationContext, "Something has wrong", Toast.LENGTH_LONG).show()
+                        Toast.makeText(applicationContext, "Please c+heck your username or password", Toast.LENGTH_LONG).show()
                 }
             )
     }
