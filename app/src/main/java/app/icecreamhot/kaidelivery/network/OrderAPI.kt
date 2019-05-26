@@ -41,7 +41,8 @@ interface OrderAPI {
                           @Field("order_status") order_status: Int,
                           @Field("order_statusdetails") order_statusdetails: String?,
                           @Field("message") message: String?,
-                          @Field("token") token: String?): Observable<ResponseMAS>
+                          @Field("token") getHistoryOrderEmployeetoken: String?,
+                          @Header("authorization") jwtToken: String): Observable<ResponseMAS>
 
     @FormUrlEncoded
     @POST("orders/comment/employee")

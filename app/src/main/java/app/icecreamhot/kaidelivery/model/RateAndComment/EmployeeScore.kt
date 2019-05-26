@@ -7,5 +7,5 @@ data class EmployeeScore(
     val empscore_date: String,
     val user_id: Int,
     val emp_id: Int,
-    val user: User
+    val user: User?
 )

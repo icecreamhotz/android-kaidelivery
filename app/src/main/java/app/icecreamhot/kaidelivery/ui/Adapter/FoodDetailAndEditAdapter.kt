@@ -28,6 +28,7 @@ class FoodDetailAndEditAdapter @Inject constructor(val food: List<OrderDetail>):
             val foodPriceText = food.orderdetail_price
             itemView.apply {
                 foodName.text = foodNameText
+                foodTotal.text = "x ${food.orderdetail_total}"
                 foodPrice.text = "${foodPriceText} $"
             }
         }

@@ -25,6 +25,7 @@ import app.icecreamhot.kaidelivery.network.OrderAPI
 import app.icecreamhot.kaidelivery.ui.Alert.FoodDetailDialog
 import app.icecreamhot.kaidelivery.ui.chat.ChatFragment
 import app.icecreamhot.kaidelivery.ui.comment.CommentFragment
+import app.icecreamhot.kaidelivery.ui.history.HistoryOrderFragment
 import app.icecreamhot.kaidelivery.ui.order.OrderDoned
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
 import app.icecreamhot.kaidelivery.utils.BASE_URL_EMPLOYEE_IMG
@@ -68,6 +69,7 @@ class TrackingMapFragment : Fragment() {
     private var polyline: Polyline? = null
 
     private lateinit var ref: DatabaseReference
+    private var realorderId: Int? = null
     private var order_name:String? = null
     private var order_status: Int? = null
 
@@ -117,6 +119,7 @@ class TrackingMapFragment : Fragment() {
         return view
     }
 
+
     private fun loadDeliveryNow() {
         val token = pref?.getString("token", null)
         token?.let {
@@ -140,6 +143,7 @@ class TrackingMapFragment : Fragment() {
                             val orderId = result.orderList.get(0).order_id
                             val empId = result.orderList.get(0).employee?.emp_id
                             val newRate = rate?.toInt()
+                            realorderId = orderId
 
                             setDataRateAndComment(newRate, empId)
                             getOrderStatus(result.orderList)
@@ -197,16 +201,40 @@ class TrackingMapFragment : Fragment() {
 
                 override fun onDataChange(p0: DataSnapshot) {
                     if(p0.value == null) {
-                        val orderId = order.order_id
-                        val userId = order.user_id
-                        val empId = order.emp_id!!
-                        val resId = order.res_id
-                        val goFragement = OrderDoned.newInstance(orderId, userId, empId, resId)
+                        realorderId?.let {
+                            disposable = orderAPI.getOrderAndOrderDetail(it)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
+                                //            .doOnTerminate { loadingOrder.visibility = View.GONE }
+                                .subscribe(
+                                    {
+                                            result ->
+                                        Log.d("test", result.toString())
+                                        if(result.data.get(0).order_status == "4") {
+                                            val orderIdGet = order.order_id
+                                            val userId = order.user_id
+                                            val empId = order.emp_id!!
+                                            val resId = order.res_id
+                                            val goFragement = OrderDoned.newInstance(orderIdGet, userId, empId, resId)
 
-                        val fm = fragmentManager
-                        fm?.beginTransaction()
-                        ?.replace(R.id.contentContainer, goFragement)
-                        ?.commitAllowingStateLoss()
+                                            val fm = fragmentManager
+                                            fm?.beginTransaction()
+                                                ?.replace(R.id.contentContainer, goFragement)
+                                                ?.commitAllowingStateLoss()
+                                        } else if(result.data.get(0).order_status == "5") {
+                                            Toast.makeText(context, "มีเหตุฉุกเฉินบางอย่าง ออเดอร์ถูกยกเลิก", Toast.LENGTH_LONG).show()
+                                            val fm = fragmentManager
+                                            fm?.beginTransaction()
+                                                ?.replace(R.id.contentContainer, HistoryOrderFragment())
+                                                ?.commitAllowingStateLoss()
+                                        }
+                                    },
+                                    {
+                                            err -> Log.d("err", err.message)
+                                    }
+                                )
+                        }
                     } else {
                         val employeeName = "${order.employee?.emp_name} ${order.employee?.emp_lastname}"
                         val getEmployeeImg = order.employee?.emp_avatar
@@ -318,7 +346,7 @@ class TrackingMapFragment : Fragment() {
     }
 
     private fun getURL(from : LatLng, to : LatLng) : String {
-        return "https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&sensor=false&mode=driving&key=AIzaSyDCkgDceoiSbeWa29pNeJxmsNipUF7P3uw"
+        return "https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&sensor=false&mode=driving&key=AIzaSyB1wuvlSdpv395HjKYb1afXx_4S1c8ak4c"
     }
 
     private inner class GetDirection(val url : String) : AsyncTask<Void, Void, List<List<LatLng>>>(){

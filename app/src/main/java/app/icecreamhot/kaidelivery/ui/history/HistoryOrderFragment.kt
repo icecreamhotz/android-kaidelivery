@@ -73,7 +73,7 @@ class HistoryOrderFragment: Fragment() {
             adapter = historyAdapter
         }
         historyAdapter.onItemClick = { order ->
-            val dialogFoodDetailsAndEdit = FoodDetailsAndEditDialog.newInstance(order.orderDetail)
+            val dialogFoodDetailsAndEdit = FoodDetailsAndEditDialog.newInstance(order)
             dialogFoodDetailsAndEdit.show(fragmentManager, "OrderDetailsAndEditFragment")
         }
     }

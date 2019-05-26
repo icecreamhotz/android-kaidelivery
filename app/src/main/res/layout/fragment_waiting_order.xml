@@ -75,7 +75,7 @@
                             android:id="@+id/txtEmployeeIdle"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="รายละเแียด"
+                            android:text="Loading"
                             android:textSize="15sp"
                             android:layout_marginLeft="15dp"
                     />
@@ -84,7 +84,7 @@
                             android:id="@+id/txtBeforeMyQueue"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="รายละเแียด"
+                            android:text="Loading"
                             android:textSize="15sp"
                             android:layout_marginLeft="15dp"
                     />
@@ -93,7 +93,7 @@
                             android:id="@+id/txtMyQueue"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="รายละเแียด"
+                            android:text="Loading"
                             android:textSize="15sp"
                             android:layout_marginLeft="15dp"
                     />

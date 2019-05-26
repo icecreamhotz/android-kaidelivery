@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     private var disposable: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        checkLogin()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -95,6 +96,10 @@ class MainActivity : AppCompatActivity() {
             commonLogin()
         }
         btn_Login.setOnClickListener(setOnClickCommonLogin)
+        registerText.setOnClickListener {
+            val register = Intent(this, RegisterActivity::class.java)
+            startActivity(register)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -107,7 +112,7 @@ class MainActivity : AppCompatActivity() {
         val editor = shared.edit()
         editor.putString("user_id", user.userId)
         editor.putString("token", user.token)
-        editor.commit()
+        editor.apply()
 
         val intent = Intent(this, MainFragment::class.java)
         startActivity(intent)
@@ -127,12 +132,20 @@ class MainActivity : AppCompatActivity() {
                         result -> loginSuccess(result.arrUserList!!)
                 },
                 {
-                        e -> Log.d("err", e.message)
-                        Toast.makeText(applicationContext, "Please c+heck your username or password", Toast.LENGTH_LONG).show()
+                        e -> Log.d("errza", e.message)
+                        Toast.makeText(applicationContext, "Please check your username or password", Toast.LENGTH_LONG).show()
                 }
             )
     }
 
+    private fun checkLogin() {
+        val pref = getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
+        val token = pref.getString("token", null)
+        token?.let {
+            val intent = Intent(this, MainFragment::class.java)
+            startActivity(intent)
+        }
+    }
 
     private fun onRetrieveStart() {
         loading.visibility = View.VISIBLE

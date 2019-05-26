@@ -21,6 +21,7 @@ data class Order (
     val order_score: Int?,
     val order_comment: String?,
     val order_status: String,
+    val order_statusdetails: String?,
     val order_timeout: String?,
     val order_deliveryprice: Double,
     var order_price: Double,

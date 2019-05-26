@@ -35,7 +35,7 @@ class OrderHistoryAdapter(val order: ArrayList<OrderHistory>): RecyclerView.Adap
         fun bind(order: OrderHistory) {
             val orderStatus = if(order.order_status == "5") "ยกเลิก" else "สำเร็จ"
             val orderDate = FormatDateISO8601().getDateTime(order.created_at)
-            val totalPrice = if(order.order_price != null) order.order_price +  order.order_deliveryprice else order.order_deliveryprice + order.orderDetailsPrice
+            val totalPrice = if(order.order_price != null) order.order_price!! +  order.order_deliveryprice else order.order_deliveryprice + order.orderDetailsPrice
             itemView.apply {
                 txtOrderStatus.text = "สถานะ : ${orderStatus}"
                 txtOrderStatusDetail.text = order.order_statusdetails
@@ -47,11 +47,8 @@ class OrderHistoryAdapter(val order: ArrayList<OrderHistory>): RecyclerView.Adap
                     txtOrderStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.colorSuccess))
                     txtOrderStatusDetail.visibility = View.GONE
                 }
-                if(order.user == null) {
-                    txtCustomerName.text = "Guest Guest"
-                } else {
-                    txtCustomerName.text = "${order.user.name} ${order.user.lastname}"
-                }
+
+                txtCustomerName.text = if(order.employee == null) "ไม่มีชื่อพนักงาน" else "${order.employee.emp_name} ${order.employee.emp_lastname}"
                 txtRestaurantName.text = "รับ ${order.restaurant.res_name}"
                 txtEndpointName.text = "ถึง ${order.endpoint_name}"
                 txtOrderDate.text = orderDate

@@ -17,7 +17,7 @@ import com.bumptech.glide.Glide
 class FoodListAdapter constructor(
     val headerList: String,
     val itemList: List<Food>,
-    val foodImg: Array<String>?,
+    val foodImg: MutableList<String>?,
     val clickListener: () -> Unit): StatelessSection(SectionParameters.builder()
     .itemResourceId(R.layout.content_food_list)
     .headerResourceId(R.layout.header_food_list)
@@ -58,21 +58,16 @@ class FoodListAdapter constructor(
 
     override fun onBindItemViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
         val itemHolder = holder as MyItemViewHolder
-        var index = 1
+        var index = if(position == 0) 0 else position + position
 
         // bind your view here
         itemHolder.tvFoodName.text = itemList.get(position).food_name
         itemHolder.tvFoodPrice.text = "${itemList.get(position).food_price} บาท"
 
-        for(img in foodImg.orEmpty()) {
-            Log.d("img", img)
-            if(index == 1) {
-                setImageToGlide(itemHolder.imgFoodOne, img.replace("\"", ""))
-            } else if(index == 2) {
-                setImageToGlide(itemHolder.imgFoodTwo, img.replace("\"", ""))
-            }
-            index++
-        }
+
+        setImageToGlide(itemHolder.imgFoodOne, foodImg!!.get(index).replace("\"", ""))
+        setImageToGlide(itemHolder.imgFoodTwo, foodImg!!.get(index+1).replace("\"", ""))
+
 
         itemHolder.btAdd.setOnClickListener {
             val foodId = itemList.get(position).food_id

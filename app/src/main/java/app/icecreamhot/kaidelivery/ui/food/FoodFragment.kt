@@ -127,7 +127,7 @@ class FoodFragment : Fragment() {
             btOrder.visibility = View.GONE
         }
         txtMenuTotal.text = "เลือก ${menu.size} รายการ |"
-        txtPriceTotal.text = "ทั้งหมด ${totalPrice} บาท"
+        txtPriceTotal.text = "ทั้งหมด ${"%.2f".format(totalPrice)} บาท"
         cardMenuDetail.visibility = View.VISIBLE
     }
 
@@ -135,19 +135,30 @@ class FoodFragment : Fragment() {
         foodList = foodListArr
         for(item in foodTypeList.orEmpty()) {
             var checkFoodTypeID = foodList?.filter{ it.foodtype_id == item.foodtype_id }
-            var replaceImg: Array<String>? = null
+            var replaceImg: MutableList<String> = ArrayList()
             if(checkFoodTypeID!!.isNotEmpty()) {
                 for(fooditem in checkFoodTypeID) {
                     if(fooditem.food_img == null) {
-                        replaceImg = arrayOf("noimg.jpg", "noimg.jpg")
+                        replaceImg.add("noimg.png")
+                        replaceImg.add("noimg.png")
                     } else {
-                        replaceImg = fooditem.food_img.let {
+                        val image = fooditem.food_img.let {
                             it.replace("[", "").replace("]", "")
                                 .split(",".toRegex()).dropLastWhile { it.isEmpty() }
                                 .toTypedArray()
                         }
+                        if(image.size == 1) {
+                            replaceImg.add(image[0])
+                            replaceImg.add("noimg.png")
+                        } else {
+                            replaceImg.add(image[0])
+                            replaceImg.add(image[1])
+                        }
                     }
                 }
+
+                Log.d("imagesize", replaceImg.size.toString())
+
                 sectionAdapter.addSection(FoodListAdapter(item.foodtype_name, checkFoodTypeID, replaceImg, clickListener = {
                     setClickListerner()
                 }))

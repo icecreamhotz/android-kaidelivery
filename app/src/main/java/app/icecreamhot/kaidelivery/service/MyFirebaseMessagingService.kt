@@ -19,7 +19,7 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
 
     private val TAG = "MyFirebaseToken"
     private lateinit var notificationManager: NotificationManager
-    private val ADMIN_CHANNEL_ID = "app.icecreamhot.kaidelivery_employee"
+    private val ADMIN_CHANNEL_ID = "app.icecreamhot.kaidelivery"
 
     override fun onNewToken(token: String?) {
         super.onNewToken(token)
@@ -27,6 +27,7 @@ class MyFirebaseMessagingService: FirebaseMessagingService() {
         val editor = sharedPref.edit()
         editor.putString("fcmtoken", token)
         editor.commit()
+        Log.i(TAG, token)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage?) {

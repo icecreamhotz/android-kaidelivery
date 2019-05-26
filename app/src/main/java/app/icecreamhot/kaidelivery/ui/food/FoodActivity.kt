@@ -89,9 +89,6 @@ class FoodActivity : AppCompatActivity() {
                         }
                     }
                 }
-                sectionAdapter.addSection(FoodListAdapter(item.foodtype_name, checkFoodTypeID, replaceImg, clickListener = {
-                    setClickListerner()
-                }))
                 hasData = true
             }
         }

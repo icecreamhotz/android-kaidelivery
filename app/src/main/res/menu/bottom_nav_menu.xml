@@ -3,17 +3,17 @@
 
     <item
             android:id="@+id/restaurant"
-            android:title="Restaurant"
+            android:title="@string/btm_restaurants"
             android:icon="@drawable/icon_pencil" />
 
     <item
             android:id="@+id/order"
-            android:title="Now Order"
+            android:title="@string/btm_travking"
             android:icon="@drawable/icon_pencil" />
 
     <item
             android:id="@+id/history"
-            android:title="History"
+            android:title="@string/btm_history"
             android:icon="@drawable/icon_pencil" />
 
 </menu>

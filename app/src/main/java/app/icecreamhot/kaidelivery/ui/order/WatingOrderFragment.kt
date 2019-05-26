@@ -1,6 +1,7 @@
 package app.icecreamhot.kaidelivery.ui.order
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -19,6 +20,7 @@ import app.icecreamhot.kaidelivery.ui.Alert.Dialog
 import app.icecreamhot.kaidelivery.ui.history.HistoryOrderFragment
 import app.icecreamhot.kaidelivery.ui.map.TrackingMapFragment
 import app.icecreamhot.kaidelivery.ui.restaurant.RestaurantListFragment
+import app.icecreamhot.kaidelivery.utils.MY_PREFS
 import com.google.firebase.database.*
 import com.google.firebase.database.DataSnapshot
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -59,6 +61,9 @@ class WatingOrderFragment: Fragment() {
     private var order_name = ""
     private var order_id = 0
 
+    private lateinit var mListener: ValueEventListener
+    private var pref: SharedPreferences? = null
+
     var dotText = -1
 
     override fun onAttach(context: Context?) {
@@ -69,6 +74,7 @@ class WatingOrderFragment: Fragment() {
         arguments?.getInt("order_id")?.let {
             order_id = it
         }
+        pref = context?.getSharedPreferences(MY_PREFS, Context.MODE_PRIVATE)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -120,24 +126,30 @@ class WatingOrderFragment: Fragment() {
         val dialogConfirm = Dialog()
         dialogConfirm.Confirm(activity, "Calcel Order", "Do you need cancel this order really ?"
             ,"Yes", "No", Runnable {
-                disposable = orderAPI.updateStatusOrder(order_id,
-                    5 ,
-                    null,
-                    null,
-                    null)
-                    .subscribeOn(Schedulers.io())
-                    .unsubscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doOnSubscribe { loading.visibility = View.VISIBLE }
-                    .doOnTerminate { loading.visibility = View.GONE }
-                    .subscribe(
-                        {
-                                deleteOrderFromFirebase(order_name)
-                        },
-                        {
-                                err -> Log.d("err", err.message)
-                        }
+                val token = pref?.getString("token", null)
+                token?.let {
+                    disposable = orderAPI.updateStatusOrder(
+                        order_id,
+                        5,
+                        null,
+                        null,
+                        null,
+                        it
                     )
+                        .subscribeOn(Schedulers.io())
+                        .unsubscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .doOnSubscribe { loading.visibility = View.VISIBLE }
+                        .doOnTerminate { loading.visibility = View.GONE }
+                        .subscribe(
+                            {
+                                deleteOrderFromFirebase(order_name)
+                            },
+                            { err ->
+                                Log.d("err", err.message)
+                            }
+                        )
+                }
             }, Runnable {
                 null
             })
@@ -146,7 +158,7 @@ class WatingOrderFragment: Fragment() {
     private fun deleteOrderFromFirebase(order_name: String) {
         ref = FirebaseDatabase.getInstance().getReference("Orders").child(order_name)
         ref.removeValue().addOnSuccessListener {
-            Toast.makeText(activity!!.applicationContext, "Cancel Success", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Cancel Success", Toast.LENGTH_LONG).show()
             backToHistoryFragment()
         }
     }
@@ -208,7 +220,7 @@ class WatingOrderFragment: Fragment() {
                     val fm = fragmentManager
                     fm?.beginTransaction()
                         ?.replace(R.id.contentContainer, mapFragment)
-                        ?.commitAllowingStateLoss()
+                        ?.commit()
                     Log.d("aluna", p0.value.toString())
                 }
             }
@@ -218,7 +230,7 @@ class WatingOrderFragment: Fragment() {
 
     private fun triggerCancelOrder() {
         ref = FirebaseDatabase.getInstance().getReference("Orders")
-        ref.child(order_name).addValueEventListener(object: ValueEventListener {
+        mListener = ref.child(order_name).addValueEventListener(object: ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
 
             }
@@ -234,34 +246,37 @@ class WatingOrderFragment: Fragment() {
 
     private fun ifCancelOrder() {
         ref = FirebaseDatabase.getInstance().getReference("Delivery")
-        ref.child(order_name).addValueEventListener(object: ValueEventListener {
-            override fun onCancelled(p0: DatabaseError) {
+        if(order_name != null) {
+            ref.child(order_name).addValueEventListener(object: ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
 
-            }
+                }
 
-            override fun onDataChange(p0: DataSnapshot) {
-                if(p0.value == null) {
-                    disposable = orderAPI.getOrderAndOrderDetail(order_id!!)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-        //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
-        //            .doOnTerminate { loadingOrder.visibility = View.GONE }
-                        .subscribe(
-                            {
-                                    result ->
+                override fun onDataChange(p0: DataSnapshot) {
+                    if(p0.value == null) {
+                        disposable = orderAPI.getOrderAndOrderDetail(order_id!!)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            //            .doOnSubscribe { loadingOrder.visibility = View.VISIBLE }
+                            //            .doOnTerminate { loadingOrder.visibility = View.GONE }
+                            .subscribe(
+                                {
+                                        result ->
+                                    Log.d("test", result.toString())
                                     val order = result.data.get(0).order_status
-                                    if(order == "5") {
-                                        Toast.makeText(activity!!.applicationContext, "พนักงานได้ยกเลิกออเดอร์ของคุณ", Toast.LENGTH_LONG).show()
+                                    if(order == "5" && result.data.get(0).order_statusdetails != "เกิดเหตุฉุกเฉิน") {
+                                        Toast.makeText(context, "พนักงานได้ยกเลิกออเดอร์ของคุณ", Toast.LENGTH_LONG).show()
                                         backToHistoryFragment()
                                     }
-                            },
-                            {
-                                    err -> Log.d("err", err.message)
-                            }
-                        )
+                                },
+                                {
+                                        err -> Log.d("err", err.message)
+                                }
+                            )
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     private fun backToHistoryFragment() {
@@ -275,6 +290,7 @@ class WatingOrderFragment: Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         mHandler.removeCallbacks(mRunnable)
+        ref.child(order_name).removeEventListener(mListener)
         disposable?.dispose()
     }
 

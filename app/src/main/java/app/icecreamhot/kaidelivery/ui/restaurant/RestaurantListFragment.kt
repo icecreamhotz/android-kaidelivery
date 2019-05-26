@@ -93,6 +93,7 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
         if (googleApiClient != null) {
             googleApiClient!!.connect()
         }
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity!!.applicationContext)
         getEmployeeTotal()
 
         edtMinPrice.addTextChangedListener(object: TextWatcher {
@@ -186,17 +187,18 @@ class RestaurantListFragment: Fragment(), GoogleApiClient.ConnectionCallbacks,
     }
 
     override fun onConnected(p0: Bundle?) {
-        if (ActivityCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity!!.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(activity!!.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity!!.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return
         }
         startLocationUpdates()
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(activity!!.applicationContext)
 
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener {
-                    location: Location ->
-                mLatitude = location.latitude
-                mLongitude = location.longitude
+                    location ->
+                if(location != null) {
+                    mLatitude = location.latitude
+                    mLongitude = location.longitude
+                }
             }
     }
 
